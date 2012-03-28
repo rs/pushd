@@ -29,9 +29,12 @@ app.param 'event_id', (req, res, next, id) ->
         delete req.params.event_id
         next()
     catch error
-        res.json error: error.message, 400      
+        res.json error: error.message, 400
 
-require('./lib/api').setupRestApi(app)
+createDevice = (fields, cb) ->
+    device.createDevice redis, fields, cb
+
+require('./lib/api').setupRestApi(app, createDevice)
 
 app.listen 80
 

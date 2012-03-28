@@ -3,13 +3,14 @@ filterFields = (params) ->
     fields[key] = val for own key, val of params when key in ['proto', 'regid', 'lang', 'badge', 'version']
     return fields
 
-exports.setupRestApi = (app) ->
+exports.setupRestApi = (app, createDevice) ->
     # Device registration
     app.post '/devices', (req, res) ->
         try
             fields = filterFields(req.body)
-            device.createDevice redis, fields, (device, created) ->
+            createDevice fields, (device, created) ->
                 device.get (info) ->
+                    info.id = device.id
                     res.header 'Location', "/device/#{device.id}"
                     res.json info, if created then 201 else 200
         catch error
