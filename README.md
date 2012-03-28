@@ -47,7 +47,7 @@ Device registration is performed thru a HTTP REST API (see later for more detail
            -d badge=0 \
            http://localhost/devices
 
-As answer, we will get a JSON object like this:
+As an answer, we get a JSON object like this:
 
     {
         "proto":"apns",
@@ -60,6 +60,14 @@ As answer, we will get a JSON object like this:
     }
 
 Your app must save the `id` field value, it will be used for all further communication with pushd.
+
+### Ping
+
+Once the app is registered, it have to ping the pushd server each time the app is launched to let pushd know the device is still there. The device may have been unregistered automatically in case of repeated errors for instance. To ping pushd, you perform a POST on the `/device/DEVICE_ID` url as follow:
+
+    $ curl -d lang=fr -d badge=0 http://localhost/device/J8lHY4X1XkU
+
+On iOS, you must update the badge value to inform pushd the user read the pending notifications. You may call this URL several time, each time the badge is updated so next notification will still increment the badge with the correct value.
 
 ### Subscriptions
 
