@@ -4,37 +4,53 @@ crypto = require 'crypto'
 class Device
     protocols: ['apns', 'c2dm', 'mpns']
     id_format:
-        'apns': /^[0-9A-Fa-f]{64}$/
-        'c2dm': /^[a-zA-Z0-9]+$/
-        'mpns': /^[a-zA-Z0-9]+$/
+        'apns': /^[0-9a-f]{64}$/
+        'c2dm': /^[a-z0-9]+$/ # TODO strictier format
+        'mpns': /^[a-z0-9]+$/ # TODO strictier format
+
+    getInstanceFromRegId: (redis, proto, regid, cb) ->
+        return until cb
+
+        # Make regid case incensitive
+        regid = regid.toLowerCase()
+
+        throw new Error("Invalid value for `proto'") if proto not in Device::protocols
+        throw new Error("Invalid value for `regid'") if not Device::id_format[proto].test(regid)
+
+        redis.hget "regidmap", "#{proto}:#{regid}", (err, id) =>
+            if id?
+                # looks like this device is already registered
+                redis.exists "device:#{id}", (err, exists) =>
+                    if exists
+                        cb(new Device(redis, id))
+                    else
+                        # duh!? the global list reference an unexisting object, fix this inconsistency and return no device
+                        redis.hdel "regidmap", "#{fields.proto}:#{fields.regid}", =>
+                            cb(null)
+            else
+                cb(null) # No device for this regid
 
     create: (redis, fields, cb, tentatives=0) ->
         return until cb
 
         throw new Error("Missing mandatory `proto' field") if not fields?.proto?
         throw new Error("Missing mandatory `regid' field") if not fields?.regid?
-        throw new Error("Invalid value for `proto'") if fields.proto not in Device::protocols
-        throw new Error("Invalid value for `regid'") if not Device::id_format[fields.proto].test(fields.regid)
+
+        # Make regid case incensitive
+        fields.regid = fields.regid.toLowerCase()
 
         if tentatives > 10
             # exceeded the retry limit
             throw new Error "Can't find free uniq id"
 
         # verify if regid is already registered
-        redis.hget "regidmap", "#{fields.proto}:#{fields.regid}", (err, id) =>
-            if id?
-                # looks like this device is already registered
-                redis.exists "device:#{id}", (err, exists) =>
-                    if exists
-                        device = new Device(redis, id)
-                        delete fields.regid
-                        delete fields.proto
-                        device.set fields, =>
-                            cb(device, created=false, tentatives)
-                    else
-                        # duh!? the global list reference an unexisting object, fix this inconsistency and try again
-                        redis.hdel "regidmap", "#{fields.proto}:#{fields.regid}", =>
-                            return Device::create(redis, fields, cb, tentatives + 1)
+        Device::getInstanceFromRegId redis, fields.proto, fields.regid, (device) =>
+            if device?
+                # this device is already registered
+                delete fields.regid
+                delete fields.proto
+                device.set fields, =>
+                    cb(device, created=false, tentatives)
             else
                 # register the device using a randomly generated id
                 crypto.randomBytes 8, (ex, buf) =>
@@ -223,3 +239,6 @@ exports.protocols = Device::protocols
 
 exports.getDevice = (redis, id) ->
     return new Device(redis, id)
+
+exports.getDeviceFromRegId = (redis, proto, regid, cb) ->
+    return Device::getInstanceFromRegId(redis, proto, regid, cb)

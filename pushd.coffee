@@ -49,3 +49,13 @@ udpApi.on 'message', (msg, rinfo) ->
             # ignore
 
 udpApi.bind 80
+
+# Handle Apple Feedbacks
+apns = require 'apn'
+options = settings.apns
+options.feedback = (time, apnsDevice) ->
+    device.getDeviceFromRegId redis, 'apns', apnsDevice.hexToken(), (device) ->
+        device?.get (info) ->
+            if info.updated < time
+                device.delete()
+feedback = new apns.Feedback(options)

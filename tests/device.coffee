@@ -57,6 +57,19 @@ exports.device =
             newDevice?.redis?.quit()
             test.done()
 
+    testGetInstanceFromRegId: (test) ->
+        test.expect(5)
+        test.ok @created, 'Device has been newly created'
+        test.equal @tentatives, 0, 'Device created with not retry'
+        device.getDeviceFromRegId @device.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (dev) =>
+            test.equal dev.id, @device.id, 'Get instance from getid get the same device'
+            device.getDeviceFromRegId @device.redis, 'apns', 'fe66489f304dc75b8d6e8200dff8a456e8daeacec428b427e9518741c92c6660', (dev) =>
+                test.equal dev.id, @device.id, 'Get instance from getid with different case get the same device'
+                device.getDeviceFromRegId @device.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6661', (dev) =>
+                    test.ok dev is null, 'Get instance on unregistered regid returns null'
+                    test.done()
+
+
     testDefaults: (test) ->
         test.expect(7)
         test.equal @tentatives, 0, 'Device created with not retry'
