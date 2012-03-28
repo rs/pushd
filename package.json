@@ -1,0 +1,30 @@
+{
+    "author": "Olivier Poitrey <rs@dailymotion.com>",
+    "name": "pushd",
+    "description": "Blazing fast multi-protocol mobile push notification service",
+    "version": "0.0.1",
+    "homepage": "https://github.com/rs/pushd",
+    "repository":
+    {
+        "type": "git",
+        "url": "git://github.com/rs/pushd.git"
+    },
+    "scripts":
+    {
+        "test": "nodeunit tests"
+    },
+    "engines":
+    {
+        "node": "~0.6.13"
+    },
+    "dependencies":
+    {
+        "apn": ">=1.1.6",
+        "c2dm": ">=1.0.4",
+        "mpns": ">=1.0.0",
+        "async": ">=0.1.18",
+        "express": ">=2.5.8",
+        "hiredis": ">=0.1.14",
+        "redis": ">=0.7.1"
+    }
+}
