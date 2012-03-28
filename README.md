@@ -25,11 +25,63 @@ Features
 Installation
 ============
 
-- Install [node.js](http://nodejs.org/), [npm](http://npmjs.org/) and [coffeescript](http://coffeescript.org/).
+- Install [redis](http://redis.io/), [node.js](http://nodejs.org/), [npm](http://npmjs.org/) and [coffeescript](http://coffeescript.org/).
 - Clone the repository: `git clone git://github.com/rs/pushd.git && cd pushd`
 - Install dependancies: `npm install`
 - Configure the server: `cp settings-sample.coffee settings.coffee && vi settings.coffee`
+- Start redis: `redis-server`
 - Start the server: `sudo coffee pushd.coffee`
+
+Getting Started
+===============
+
+### Register
+
+At first launch, your app must register with the push notification service to get a registration id. It then provide this registration id to pushd in exchange of a device id (This device id will be used with all further communication with pushd). Some information can be sent with the request to pushd like device language, version or current badge value.
+
+Device registration is performed thru a HTTP REST API (see later for more detail). Here is an example of device registration simulated using the curl command. As an example, we will register the iOS device registration id `FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660`. For iOS, we have to specify the `apns` protocol. We also set the device language to `fr` for French and init the badge to `0`. We suppose the command is run on the same machin as pushd:
+
+    $ curl -d proto=apns \
+           -d regid=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660 \
+           -d lang=fr \
+           -d badge=0 \
+           http://localhost/devices
+
+As answer, we will get a JSON object like this:
+
+    {
+        "proto":"apns",
+        "regid":"fe66489f304dc75b8d6e8200dff8a456e8daeacec428b427e9518741c92c6660",
+        "lang":"fr",
+        "badge":0,
+        "updated":1332953375,
+        "created":1332953375,
+        "id":"J8lHY4X1XkU"
+    }
+
+Your app must save the `id` field value, it will be used for all further communication with pushd.
+
+### Subscriptions
+
+Depending your service, your app may auto-subscribe the device to some events or ask the user which events he want to be subscribed to (An event is identified as an arbitrary string meaningful for you service). For each event your app want to be subscribed to, a call the the pushd API have to be performed.
+
+For instance, if your app is about news, you may want to create one subscriptable event for each news category. So if our user want to subcribe to `sport` events, the following call to pushd will have to be performed:
+
+    $ curl -X POST http://localhost/device/J8lHY4X1XkU/subscriptions/sport
+
+You may later unsubscribe by replacing the `POST` by a `DELETE` method.
+
+We recommand to auto-subscribe your users to some global event like for instance a country event if your app is international. This will let you send targetted message to all users of a given country.
+
+### Event Ingestion
+
+Once we have registered devices, our service may start to send event. Events are composed of a message, optionally translated in serveral language and some additionnal data to be passed to your application. To send an event, you may either use the HTTP REST API or send UDP datagram.
+
+You don't need to create event before to send them. If nobody is subscribe to a given event, it will be just ignored. It's thus recommanded to send all kinds of events that may be of interest and let your application choose which want to subscribe.
+
+Here we will send message to all devices subscribed to the `sport` event:
+
+    $ curl -d msg=Test%20message http://localhost/event/sport
 
 API
 ===
@@ -215,7 +267,7 @@ To test the presence of a single subscription, perform a GET on the subscription
     <
     < {"ignore_message":false}
 
-Event Injection
+Event Ingestion
 ---------------
 
 To generate notifications, your service must send events to pushd. The service doesn't have to know if a device is subscribed to an event in order to send it, it just send all subscriptable events as they happen and pushd handles the rest.
