@@ -37,9 +37,9 @@ Getting Started
 
 ### Register
 
-At first launch, your app must register with the push notification service to get a registration id. It then provide this registration id to pushd in exchange of a device id (This device id will be used with all further communication with pushd). Some information can be sent with the request to pushd like device language, version or current badge value.
+At first launch, your app must register with the push notification service to get a registration id. It then provides this registration id to pushd in exchange for a device id (This device id will be used with all further communications with pushd). Some informations can be sent with the request to pushd like: device language, version or current badge value.
 
-Device registration is performed thru a HTTP REST API (see later for more detail). Here is an example of device registration simulated using the curl command. As an example, we will register the iOS device registration id `FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660`. For iOS, we have to specify the `apns` protocol. We also set the device language to `fr` for French and init the badge to `0`. We suppose the command is run on the same machin as pushd:
+Device registration is performed through a HTTP REST API (see later for more details). Here is an example of a device registration simulated using the curl command. As an example, we will register the iOS device with the registration id `FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660`. For iOS, we have to specify the `apns` protocol. We also set the device language to `fr` for French and init the badge to `0`. We suppose the command is run on the same machine as pushd:
 
     $ curl -d proto=apns \
            -d regid=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660 \
@@ -47,7 +47,7 @@ Device registration is performed thru a HTTP REST API (see later for more detail
            -d badge=0 \
            http://localhost/devices
 
-As an answer, we get a JSON object like this:
+In reply, we get the following JSON structure:
 
     {
         "proto":"apns",
@@ -63,31 +63,31 @@ Your app must save the `id` field value, it will be used for all further communi
 
 ### Ping
 
-Once the app is registered, it have to ping the pushd server each time the app is launched to let pushd know the device is still there. The device may have been unregistered automatically in case of repeated errors for instance. To ping pushd, you perform a POST on the `/device/DEVICE_ID` url as follow:
+Once the app is registered, it has to ping the pushd server each time the app is launched to let pushd know the device still exists. The device may have been unregistered automatically in case of repeated errors for instance. To ping pushd, you perform a POST on the `/device/DEVICE_ID` url as follow:
 
     $ curl -d lang=fr -d badge=0 http://localhost/device/J8lHY4X1XkU
 
-On iOS, you must update the badge value to inform pushd the user read the pending notifications. You may call this URL several time, each time the badge is updated so next notification will still increment the badge with the correct value.
+On iOS, you must update the badge value to inform pushd the user read the pending notifications. You may call this URL several times, each time the badge is updated, so the next notification will still increment the badge with the correct value.
 
 ### Subscriptions
 
-Depending your service, your app may auto-subscribe the device to some events or ask the user which events he want to be subscribed to (An event is identified as an arbitrary string meaningful for you service). For each event your app want to be subscribed to, a call the the pushd API have to be performed.
+Depending on your service, your app may auto-subscribe the device to some events or ask the user which events he wants to be subscribed to (an event is identified as an arbitrary string meaningful for you service). For each event your app wants to be subscribed to, a call to the pushd API must be performed.
 
-For instance, if your app is about news, you may want to create one subscriptable event for each news category. So if our user want to subcribe to `sport` events, the following call to pushd will have to be performed:
+For instance, if your app is news related, you may want to create one subscriptable event for each news category. So if your user wants to subscribe to `sport` events, the following call to pushd has to be performed:
 
     $ curl -X POST http://localhost/device/J8lHY4X1XkU/subscriptions/sport
 
-You may later unsubscribe by replacing the `POST` by a `DELETE` method.
+You may later unsubscribe by switching from the `POST` to the `DELETE` method.
 
-We recommand to auto-subscribe your users to some global event like for instance a country event if your app is international. This will let you send targetted message to all users of a given country.
+We recommend to auto-subscribe your users to some global event like for instance a country event if your app is international. This will let you send targeted messages to all of a given country’s users.
 
 ### Event Ingestion
 
-Once we have registered devices, our service may start to send event. Events are composed of a message, optionally translated in serveral language and some additionnal data to be passed to your application. To send an event, you may either use the HTTP REST API or send UDP datagram.
+Once devices are registered, our service may start to send events. Events are composed of a message, optionally translated in several languages and some additional data to be passed to your application. To send an event, you may either use the HTTP REST API or send UDP datagrams.
 
-You don't need to create event before to send them. If nobody is subscribe to a given event, it will be just ignored. It's thus recommanded to send all kinds of events that may be of interest and let your application choose which want to subscribe.
+You don't need to create events before sending them. If nobody is subscribed to a given event, it will be simply ignored. It's thus recommended to send all the possible types of events and let your application choose which to subscribe to.
 
-Here we will send message to all devices subscribed to the `sport` event:
+Here we will send a message to all devices subscribed to the `sport` event:
 
     $ curl -d msg=Test%20message http://localhost/event/sport
 
@@ -110,9 +110,9 @@ Register a device by POSTing on `/devices` with some device information like reg
     > badge=0
     > 
     ---
-	< HTTP/1.1 201 Created
-	< Location: /device/JYJ1ehuEHbU
-	< Content-Type: application/json
+    < HTTP/1.1 201 Created
+    < Location: /device/JYJ1ehuEHbU
+    < Content-Type: application/json
     < 
     < {
     <   "created":1332638892,
@@ -122,6 +122,7 @@ Register a device by POSTing on `/devices` with some device information like reg
     <   "lang":"fr",
     <   "badge":10
     < }
+
 *Carriage returns are added for readability*
 
 #### Mandatory parameters:
@@ -134,19 +135,19 @@ Register a device by POSTing on `/devices` with some device information like reg
 
 #### Allowed parameters:
 
-- `lang`: The language code for the of the device. This parameter is used to determine which message translation to use when pushing text notifications. You may use the 2 chars code or full culture language code (i.e.: en_CA) or any value you want as long as you provide the same values in your events. See below for info about event formating.
-- `badge`: The current app badge value. This parameter is only relevant for iOS for which badge counter must be maintained server side. On iOS, when user read or load more unread items, you must inform the server of the badge's new value. This badge value will be incremented automatically by pushd each time a new notification is sent to the device.
+- `lang`: The language code for the of the device. This parameter is used to determine which message translation to use when pushing text notifications. You may use the 2 chars ISO code or a complete locale code (i.e.: en_CA) or any value you want as long as you provide the same values in your events. See below for info about events formatting.
+- `badge`: The current app badge value. This parameter is only applicable to iOS for which badge counters must be maintained server side. On iOS, when a user read or loads more unread items, you must inform the server of the badge's new value. This badge value will be incremented automatically by pushd each time a new notification is sent to the device.
 - `version`: This is the OS device version. This parameter is only needed by Windows Phone OS. By setting this value to 7.5 or greater an `mpns` device ids will enable new MPNS push features.
 
 #### Return Codes
 
-- `200` Device previousely registered
-- `201` Device registered successfuly
-- `400` Specified registration id or protocol is invalid
+- `200` Device previously registered
+- `201` Device successfully registered
+- `400` Invalid specified registration id or protocol
 
 ### Update Device Registration Info
 
-On each app launch, it is highly recommanded to update your device information in order to inform pushd your device is still alive and registered for notifications. Do not forget to check if the app notifications hasn't been disabled since the last launch, and call `DELETE` if so. If this request return a 404 error, it means your device registration have been cancelled by pushd. You then have to forget the device id and register the device again in pushd. Your pushd device registration can be cancelled if pushd ecouentered a too high number of push errors or if the target platform push service informed pushd about an inactive device (i.e. Apple Feedback Service).
+On each app launch, it is highly recommended to update your device information in order to inform pushd your device is still alive and registered for notifications. Do not forget to check if the app notifications hasn't been disabled since the last launch, and call `DELETE` if so. If this request returns a 404 error, it means your device registration has been cancelled by pushd. You must then delete the previously obtained device id and restart the registration process for this device. Registration can be cancelled after pushd error count for the device reached a predefined threshold or if the target platform push service informed pushd about an inactive device (i.e. Apple Feedback Service).
 
     > POST /device/DEVICE_ID HTTP/1.1
     > Content-Type: application/x-www-form-urlencoded
@@ -158,21 +159,21 @@ On each app launch, it is highly recommanded to update your device information i
 
 #### Allowed parameters:
 
-- `lang`: The language code for the of the device. This parameter is used to determine which message translation to use when pushing text notifications. You may use the 2 chars code or full culture language code (i.e.: en_CA) or any value you want as long as you provide the same values in your events. See below for info about event formating.
-- `badge`: The current app badge value. This parameter is only relevant for iOS for which badge counter must be maintained server side. On iOS, when user read or load more unread items, you must inform the server of the badge's new value. This badge value will be incremented automatically by pushd each time a new notification is sent to the device.
+- `lang`: The language code for the of the device. This parameter is used to determine which message translation to use when pushing text notifications. You may use the 2 chars ISO code or a complete locale code (i.e.: en_CA) or any value you want as long as you provide the same values in your events. See below for info about events formatting.
+- `badge`: The current app badge value. This parameter is only applicable to iOS for which badge counters must be maintained server side. On iOS, when a user read or loads more unread items, you must inform the server of the badge's new value. This badge value will be incremented automatically by pushd each time a new notification is sent to the device.
 - `version`: This is the OS device version. This parameter is only needed by Windows Phone OS. By setting this value to 7.5 or greater an `mpns` device ids will enable new MPNS push features.
 
-NOTE: this method should be called each time the app is openned to inform pushd the device is still alive. If you don't, the device may be automatically unregistered in case of repeated push errors.
+NOTE: this method should be called each time the app is opened to inform pushd the device is still alive. If you don’t, the device may be automatically unregistered in case of repeated push error.
 
 #### Return Codes
 
-- `204` Device info edited successfuly
+- `204` Device info edited successfully
 - `400` Format of the device id or a field value is invalid
 - `404` The specified device does not exist
 
 ### Unregister a Device ID
 
-When the user choose to disable notification from within your app, you can delete the device from pushd so pushd won't send further push notifications.
+When the user chooses to disable notifications from within your app, you can delete the device from pushd so pushd won't send further push notifications.
 
     > DELETE /device/DEVICE_ID HTTP/1.1
     >
@@ -181,13 +182,13 @@ When the user choose to disable notification from within your app, you can delet
 
 #### Return Codes
 
-- `204` Device unregistered successfuly
+- `204` Device unregistered successfully
 - `400` Invalid device id format
 - `404` The specified device does not exist
 
 ### Get information about a Device ID
 
-You may want to read information stored about a device id.
+You may want to read informations stored about a device id.
 
     > GET /device/DEVICE_ID HTTP/1.1
     >
@@ -203,18 +204,19 @@ You may want to read information stored about a device id.
     <   "lang":"fr",
     <   "badge":10
     < }
+
 *Carriage returns are added for readability*
 
 #### Return Codes
-- `200` Device exist, information returned
+- `200` Device exists, information returned
 - `400` Invalid device id format
 - `404` The specified device does not exist
 
 ### Subscribe to an Event
 
-For pushd, an event is represented as a simple string. By default a device won't receive push notifications other than broadcasts or direct messages if not subscribed to events. Events are text and/or data sent by your service on pushd. Pushd's role is to convert this event into a push notification for any device subscribed to it.
+For pushd, an event is represented as a simple string. By default a device won't receive push notifications other than broadcasts or direct messages if it’s not subscribed to events. Events are text and/or data sent by your service on pushd. Pushd's role is to convert this event into a push notification for any subscribed device.
 
-You subscribe a previousely registered device by POSTing on `/device/DEVICE_ID/subscriptions/EVENT_NAME` where `EVENT_NAME` is a uniq string representing the event. You may post an option parameter to configure the subscription.
+You subscribe a previously registered device by POSTing on `/device/DEVICE_ID/subscriptions/EVENT_NAME` where `EVENT_NAME` is a unique string code for the event. You may post an option parameter to configure the subscription.
 
 	> POST /device/DEVICE_ID/subscriptions/EVENT_NAME HTTP/1.1
 	> Content-Type: application/x-www-form-urlencoded
@@ -226,18 +228,18 @@ You subscribe a previousely registered device by POSTing on `/device/DEVICE_ID/s
 
 #### Allowed Parameter
 
-- `ignore_message`: By default to 0, if turned to 1 the message part of the subscribed event won't be sent with the notification. On iOS, the badge will still be incremented and updated. You can use this to update the badge counter on iOS without disturbing the user if he didn't want to be explicitely notified for this event but still want to know how many new items are available. On Android you may use this kind of subscription to notify your application about new items available so it can perform background pre-fetching without user notification.
+- `ignore_message`: Defaults to 0, if set to 1, the message part of the subscribed event won't be sent with the notification. On iOS, the badge will still be incremented and updated. You can use this to update the badge counter on iOS without disturbing the user if he didn't want to be explicitly notified for this event but still wants to know how many new items are available. On Android you may use this kind of subscription to notify your application about new items available so it can perform background pre-fetching without user notification.
 
 #### Return Codes
 
-- `201` Subscription created successfuly
-- `204` Subscription updated successfuly
+- `201` Subscription successfully created
+- `204` Subscription successfully updated
 - `400` Invalid device id event name format
 - `404` The specified device does not exist
 
-### Unsubscribe an Event
+### Unsubscribe from an Event
 
-To unsubscribe an event, perform a DELETE on the subscription URL.
+To unsubscribe from an event, perform a DELETE on the subscription URL.
 
 	> DELETE /device/DEVICE_ID/subscriptions/EVENT_NAME HTTP/1.1
     >
@@ -247,12 +249,12 @@ To unsubscribe an event, perform a DELETE on the subscription URL.
 #### Return Codes
 
 - `204` Subscription deleted
-- `400` Invalid device id event name format
+- `400` Invalid device id or event name format
 - `404` The specified device does not exist
 
-### List Device's Subscriptions
+### List Devices’ Subscriptions
 
-To get the list of events subscribed by a device, perform a GET on the `/device/DEVICE_ID/subscriptions`.
+To get the list of events a device is subscribed to, perform a GET on the `/device/DEVICE_ID/subscriptions`.
 
     > GET /device/DEVICE_ID/subscriptions HTTP/1.1
     >
@@ -265,7 +267,7 @@ To get the list of events subscribed by a device, perform a GET on the `/device/
     <   "EVENT_NAME2": ...
     < }
 
-To test the presence of a single subscription, perform a GET on the subscription URL
+To test for the presence of a single subscription, perform a GET on the subscription URL
 
     > GET /device/DEVICE_ID/subscriptions/EVENT_NAME HTTP/1.1
     >
@@ -284,33 +286,33 @@ An event is a JSON object in a specific format sent to pushd either using HTTP P
 
 ### Event Message Format
 
-An event message is a serie of optional key/values:
+An event message is a dictionary of optional key/values:
 
-- `msg`: The event message. If not message is provided, the event will only send data to the app and won't notify the user. *The message can contain placeholders to other keys, see Message Template bellow.*
-- `msg.<lang>`: The translated version of the event message. The `<lang>` part must match the `lang` property of a target device. If device use full locale (i.e. `fr_CA`), and no matching locale message is provided, pushd will fallback on a lauguage only version of the message if any (i.e. `fr`). If no translation matches, the `msg` key is used. *The message can contain placeholders to other keys, see Message Template bellow.*
+- `msg`: The event message. If no message is provided, the event will only send data to the app and won't notify the user. *The message can contain placeholders to other keys, see Message Template bellow.*
+- `msg.<lang>`: The translated version of the event message. The `<lang>` part must match the `lang` property of a target device. If devices use full locale (i.e. `fr_CA`), and no matching locale message is provided, pushd will fallback to a language only version of the message if any (i.e. `fr`). If no translation matches, the `msg` key is used. *The message can contain placeholders to other keys, see Message Template bellow.*
 - `data.<key>`: Key/values to be attached to the notification
 - `var.<key>`: Stores strings to be reused in `msg` and `<lang>.msg` contents
 - `sound`: The name of a sound file to be played. It must match a sound file name contained in you bundle app. (iOS only)
 
 ### Event Message Template
 
-The `msg` and `<lang>.msg` keys may contains references to others keys in the event object. You may refer either `data.<key>` or `var.<key>`. Use the `${<key name>}` syntax to refer to those key (ex: `${var.title}`).
+The `msg` and `<lang>.msg` keys may contain references to others keys in the event object. You may refer either to `data.<key>` or `var.<key>`. Use the `${<key name>}` syntax to refer to those keys (ex: `${var.title}`).
 
-Here is an example of event message using translations and templating (spaces and cariage returns have been added for readability):
+Here is an example of an event message using translations and templating (spaces and carriage returns have been added for readability):
 
     msg=${var.name} sent a new video: ${var.title}
     msg.fr=${var.name} a envoyé une nouvelle video: ${var.title}
     sound=newVideo.mp3
     data.user_id=fkwhpd
     data.video_id=1k3dxk
-    var.name=Jone Doe
+    var.name=John Doe
     var.title=Super awesome video
 
 ### Event API
 
 #### HTTP
 
-You send an event to pushd over HTTP by POSTing the JSON object to the `/event/EVENT_NAME` endpoint of the pushd server:
+To send an event to pushd over HTTP, POST the JSON object to the `/event/EVENT_NAME` endpoint of the pushd server:
 
     > POST /event/user.newVideo:fkwhpd HTTP/1.1
     > Content-Type: application/x-www-form-urlencoded
@@ -324,13 +326,14 @@ You send an event to pushd over HTTP by POSTing the JSON object to the `/event/E
     > var.title=Super awesome video
     ---
     < HTTP/1.1 204 Ok
+
 *Carriage returns are added for readability*
 
 The server will answer OK immediately. This doesn't mean the event has already been delivered.
 
 #### UDP
 
-The UDP event posting API consists of a UDP datagram targetted at the UDP port 80 containing the URI of the event followed by the message content as query-string:
+The UDP event posting API consists of a UDP datagram targeted at the UDP port 80 containing the URI of the event followed by the message content as query-string:
 
     /event/user.newVideo:fkwhpd?msg=%24%7Bvar.name%7D+sent+a+new+video%3A+%24%7Bvar.title%7D&msg.fr=%24%7Bvar…
 
