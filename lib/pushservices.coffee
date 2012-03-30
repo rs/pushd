@@ -28,7 +28,7 @@ class PushServiceC2DM
     push: (device, subOptions, info, payload) ->
         note =
             registration_id: device.id
-            collapse_key: payload.eventName
+            collapse_key: payload.event.name
         if not (subOptions & event.OPTION_IGNORE_MESSAGE) and message = payload.localizedMessage(info.lang) 
             note['data.message'] = message
         note["data.#{key}"] = value for key, value of payload.data

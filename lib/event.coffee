@@ -29,7 +29,7 @@ class Event
                     cb(null)
 
     publish: (data, cb) ->
-        payload = new EventPayload(data)
+        payload = new EventPayload(@, data)
 
         @redis.sismember "events", @name, (err, exists) =>
             if not exists
@@ -117,7 +117,7 @@ class EventPayload
             return @msg.default
 
 
-    constructor: (data) ->
+    constructor: (@event, data) ->
         throw new Error('Invalid payload') unless typeof data is 'object'
 
         @msg = {}
