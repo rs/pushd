@@ -32,7 +32,11 @@ class PushServiceC2DM
         if not (subOptions & event.OPTION_IGNORE_MESSAGE) and message = payload.localizedMessage(info.lang) 
             note['data.message'] = message
         note["data.#{key}"] = value for key, value of payload.data
-        @driver.send note # TODO handle retries and device error accounting
+        @driver.send note (err, msgid) ->
+            switch err
+                when 'InvalidRegistration', 'NotRegistered'
+                    # Handle C2DM API feedback about no longer or invalid registrations
+                    device.delete()
 
 
 class PushServiceMPNS
