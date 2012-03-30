@@ -4,6 +4,7 @@
     "description": "Blazing fast multi-protocol mobile push notification service",
     "version": "0.0.1",
     "homepage": "https://github.com/rs/pushd",
+    "keywords": ["push", "notification", "apns", "c2dm", "mpns", "ios", "android", "windows", "phone"],
     "repository":
     {
         "type": "git",
