@@ -26,7 +26,13 @@ class PushServiceC2DM
         conf.concurrency ?= 10
         conf.keepAlive = true
         @driver = new c2dm.C2DM(conf)
-        @queue = async.queue(@_pushTask, conf.concurrency)
+        @driver.login (err, token) =>
+            if err then throw Error(err)
+            [queuedTasks, @queue] = [@queue, async.queue(@_pushTask, conf.concurrency)]
+            for task in queuedTasks
+                @queue.push task
+        # Queue into an array waiting for C2DM login to complete
+        @queue = []
 
     push: (device, subOptions, info, payload) ->
         @queue.push

@@ -9,8 +9,10 @@ exports.apns =
     #gateway: 'gateway.sandbox.push.apple.com'
 
 exports.c2dm =
-    # Obtained with curl -X POST https://www.google.com/accounts/ClientLogin -d Email=ROLE_EMAIL -d Passwd=ROLE_PASSWORDPASS -d accountType=HOSTED_OR_GOOGLE -d service=ac2dm -d source=YOURCOMPANY-YOURAPP-Version
-    token: 'Auth=VVVVEEERY-HUDE-TOKEN'
+    # App credentials
+    user: 'app-owner@gmail.com'
+    password: 'something complicated and secret'
+    source: 'com.yourcompany.app-name'
     # How many concurrent requests to perform
     concurrency: 10
 

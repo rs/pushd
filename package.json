@@ -21,7 +21,7 @@
     "dependencies":
     {
         "apn": ">=1.1.6",
-        "c2dm": ">=1.0.4",
+        "c2dm": "https://github.com/rs/node-c2dm/tarball/1.1.0",
         "mpns": ">=1.0.0",
         "async": ">=0.1.18",
         "express": ">=2.5.8",
