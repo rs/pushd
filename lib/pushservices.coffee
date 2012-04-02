@@ -1,4 +1,5 @@
 event = require './event'
+async = require 'async'
 apns = require 'apn'
 c2dm = require 'c2dm'
 #mpns = require 'mpns'
@@ -22,21 +23,30 @@ class PushServiceAPNS
 
 class PushServiceC2DM
     constructor: (conf) ->
+        conf.concurrency ?= 10
         conf.keepAlive = true
         @driver = new c2dm.C2DM(conf)
+        @queue = async.queue(@_pushTask, conf.concurrency)
 
     push: (device, subOptions, info, payload) ->
+        @queue.push
+            device: device,
+            subOptions: subOptions,
+            info: info,
+            payload: payload
+
+    _pushTask: (task, done) ->
         note =
-            registration_id: device.id
-            collapse_key: payload.event.name
-        if not (subOptions & event.OPTION_IGNORE_MESSAGE) and message = payload.localizedMessage(info.lang) 
+            registration_id: task.device.id
+            collapse_key: task.payload.event.name
+        if not (task.subOptions & event.OPTION_IGNORE_MESSAGE) and message = task.payload.localizedMessage(task.info.lang) 
             note['data.message'] = message
-        note["data.#{key}"] = value for key, value of payload.data
+        note["data.#{key}"] = value for key, value of task.payload.data
         @driver.send note (err, msgid) ->
-            switch err
-                when 'InvalidRegistration', 'NotRegistered'
-                    # Handle C2DM API feedback about no longer or invalid registrations
-                    device.delete()
+            done()
+            if err in ['InvalidRegistration', 'NotRegistered']
+                # Handle C2DM API feedback about no longer or invalid registrations
+                task.device.delete()
 
 
 class PushServiceMPNS

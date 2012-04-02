@@ -11,6 +11,8 @@ exports.apns =
 exports.c2dm =
     # Obtained with curl -X POST https://www.google.com/accounts/ClientLogin -d Email=ROLE_EMAIL -d Passwd=ROLE_PASSWORDPASS -d accountType=HOSTED_OR_GOOGLE -d service=ac2dm -d source=YOURCOMPANY-YOURAPP-Version
     token: 'Auth=VVVVEEERY-HUDE-TOKEN'
+    # How many concurrent requests to perform
+    concurrency: 10
 
 exports.mpns =
     endpoint: 'http://sn1.notify.live.net/throttledthirdparty/01.00/YOUR_ENDPOINT_HERE'
