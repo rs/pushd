@@ -4,18 +4,20 @@ crypto = require 'crypto'
 class Device
     protocols: ['apns', 'c2dm', 'mpns']
     id_format:
-        'apns': /^[0-9a-f]{64}$/
-        'c2dm': /^[a-z0-9]+$/ # TODO strictier format
+        'apns': /^[0-9a-f]{64}$/i
+        'c2dm': /^[a-zA-Z0-9_-]+$/
         'mpns': /^[a-z0-9]+$/ # TODO strictier format
 
     getInstanceFromRegId: (redis, proto, regid, cb) ->
         return until cb
 
-        # Make regid case incensitive
-        regid = regid.toLowerCase()
 
         throw new Error("Invalid value for `proto'") if proto not in Device::protocols
         throw new Error("Invalid value for `regid'") if not Device::id_format[proto].test(regid)
+
+        # Store regid in lowercase if format ignores case
+        if Device::id_format[proto].ignoreCase
+            regid = regid.toLowerCase()
 
         redis.hget "regidmap", "#{proto}:#{regid}", (err, id) =>
             if id?
@@ -36,8 +38,9 @@ class Device
         throw new Error("Missing mandatory `proto' field") if not fields?.proto?
         throw new Error("Missing mandatory `regid' field") if not fields?.regid?
 
-        # Make regid case incensitive
-        fields.regid = fields.regid.toLowerCase()
+        # Store regid in lowercase if format ignores case
+        if Device::id_format[fields.proto].ignoreCase
+            fields.regid = fields.regid.toLowerCase()
 
         if tentatives > 10
             # exceeded the retry limit

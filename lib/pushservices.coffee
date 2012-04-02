@@ -28,7 +28,7 @@ class PushServiceC2DM
         @driver = new c2dm.C2DM(conf)
         @driver.login (err, token) =>
             if err then throw Error(err)
-            [queuedTasks, @queue] = [@queue, async.queue(@_pushTask, conf.concurrency)]
+            [queuedTasks, @queue] = [@queue, async.queue((=> @_pushTask.apply(@, arguments)), conf.concurrency)]
             for task in queuedTasks
                 @queue.push task
         # Queue into an array waiting for C2DM login to complete
@@ -43,12 +43,12 @@ class PushServiceC2DM
 
     _pushTask: (task, done) ->
         note =
-            registration_id: task.device.id
+            registration_id: task.info.regid
             collapse_key: task.payload.event.name
         if not (task.subOptions & event.OPTION_IGNORE_MESSAGE) and message = task.payload.localizedMessage(task.info.lang) 
             note['data.message'] = message
         note["data.#{key}"] = value for key, value of task.payload.data
-        @driver.send note (err, msgid) ->
+        @driver.send note, (err, msgid) =>
             done()
             if err in ['InvalidRegistration', 'NotRegistered']
                 # Handle C2DM API feedback about no longer or invalid registrations
