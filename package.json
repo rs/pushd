@@ -27,5 +27,10 @@
         "express": ">=2.5.8",
         "hiredis": ">=0.1.14",
         "redis": ">=0.7.1"
+    },
+    "devDependencies":
+    {
+        "nodeunit": ">=0.7.4",
+        "coffee-script": "1.2.0"
     }
 }
