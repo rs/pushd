@@ -1,3 +1,6 @@
+exports.server =
+    logging: yes
+
 exports.apns =
     # Convert cert.cer and key.p12 using:
     # $ openssl x509 -in cert.cer -inform DER -outform PEM -out apns-cert.pem

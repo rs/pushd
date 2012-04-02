@@ -11,6 +11,7 @@ pushservices = require('./lib/pushservices').getPushServices(settings)
 app = express.createServer()
 
 app.configure ->
+    app.use(express.logger('tiny')) if settings.server?.access_log
     app.use(express.limit('1mb')) # limit posted data to 1MB
     app.use(express.bodyParser())
     app.use(app.router)
