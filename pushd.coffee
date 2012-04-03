@@ -5,13 +5,14 @@ redis = require('redis').createClient()
 device = require './lib/device'
 event = require './lib/event'
 settings = require './settings'
-pushservices = require('./lib/pushservices').getPushServices(settings)
+logger = console
+pushservices = require('./lib/pushservices').getPushServices(settings, logger)
 
 
 app = express.createServer()
 
 app.configure ->
-    app.use(express.logger('tiny')) if settings.server?.access_log
+    app.use(express.logger(':method :url :status')) if settings.server?.access_log
     app.use(express.limit('1mb')) # limit posted data to 1MB
     app.use(express.bodyParser())
     app.use(app.router)
@@ -49,8 +50,11 @@ udpApi.on 'message', (msg, rinfo) ->
     if m = req.pathname.match(event_route)
         try
             event.getEvent(redis, pushservices, m[1]).publish(req.query)
+            logger.log("UDP #{req.pathname} 204") if settings.server?.access_log
         catch error
-            # ignore
+            logger.error(error.stack)
+    else
+        logger.log("UDP #{req.pathname} 404") if settings.server?.access_log
 
 udpApi.bind 80
 
@@ -61,5 +65,6 @@ options.feedback = (time, apnsDevice) ->
     device.getDeviceFromRegId redis, 'apns', apnsDevice.hexToken(), (device) ->
         device?.get (info) ->
             if info.updated < time
+                logger.warn("APNS Automatic unregistration for device #{device.id}")
                 device.delete()
 feedback = new apns.Feedback(options)

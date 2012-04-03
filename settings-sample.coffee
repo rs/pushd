@@ -1,5 +1,5 @@
 exports.server =
-    logging: yes
+    access_log: yes
 
 exports.apns =
     # Convert cert.cer and key.p12 using:

@@ -5,12 +5,15 @@ c2dm = require 'c2dm'
 #mpns = require 'mpns'
 
 class PushServiceAPNS
-    constructor: (conf) ->
+    constructor: (conf, @logger) ->
+        conf.errorCallback = (errCode, note) =>
+            @logger?.error("APNS Error #{errCode} for device #{note?.device?.id}")
         @driver = new apns.Connection(conf)
 
     push: (device, subOptions, info, payload) ->
         note = new apns.Notification()
         note.device = new apns.Device(info.regid)
+        note.device.id = device.id # used for error logging
         if not (subOptions & event.OPTION_IGNORE_MESSAGE) and alert = payload.localizedMessage(info.lang) 
             note.alert = alert
         note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
@@ -22,7 +25,7 @@ class PushServiceAPNS
 
 
 class PushServiceC2DM
-    constructor: (conf) ->
+    constructor: (conf, @logger) ->
         conf.concurrency ?= 10
         conf.keepAlive = true
         @driver = new c2dm.C2DM(conf)
@@ -50,13 +53,15 @@ class PushServiceC2DM
         note["data.#{key}"] = value for key, value of task.payload.data
         @driver.send note, (err, msgid) =>
             done()
+            @logger?.error("C2DM Error #{err} for device #{task.device.id}")
             if err in ['InvalidRegistration', 'NotRegistered']
                 # Handle C2DM API feedback about no longer or invalid registrations
+                @logger?.warn("C2DM Automatic unregistration for device #{task.device.id}")
                 task.device.delete()
 
 
 class PushServiceMPNS
-    constructor: (@conf) ->
+    constructor: (@conf, @logger) ->
 
     push: (device, subOptions, info, payload) ->
         # TO BE IMPLEMENTED
@@ -76,9 +81,9 @@ class PushServices
 
 exports.PushServices = PushServices
 
-exports.getPushServices = (conf) ->
+exports.getPushServices = (conf, logger) ->
     services = new PushServices()
-    services.addService('apns', new PushServiceAPNS(conf.apns)) if conf.apns
-    services.addService('c2dm', new PushServiceC2DM(conf.c2dm)) if conf.c2dm
-    services.addService('mpns', new PushServiceMPNS(conf.mpns)) if conf.mpns
+    services.addService('apns', new PushServiceAPNS(conf.apns, logger)) if conf.apns
+    services.addService('c2dm', new PushServiceC2DM(conf.c2dm, logger)) if conf.c2dm
+    services.addService('mpns', new PushServiceMPNS(conf.mpns, logger)) if conf.mpns
     return services
