@@ -288,8 +288,8 @@ An event is a JSON object in a specific format sent to pushd either using HTTP P
 
 An event message is a dictionary of optional key/values:
 
-- `msg`: The event message. If no message is provided, the event will only send data to the app and won't notify the user. *The message can contain placeholders to other keys, see Message Template bellow.*
-- `msg.<lang>`: The translated version of the event message. The `<lang>` part must match the `lang` property of a target device. If devices use full locale (i.e. `fr_CA`), and no matching locale message is provided, pushd will fallback to a language only version of the message if any (i.e. `fr`). If no translation matches, the `msg` key is used. *The message can contain placeholders to other keys, see Message Template bellow.*
+- `title`, `msg`: The event title/message. If no title nor message are provided, the event will only send data to the app and won't notify the user. The `title` is only relevant for Android and Windows Phone, iOS doesn't support this value: the application name is always used as notification title. *The value can contain placeholders to other keys, see Message Template bellow.*
+- `title.<lang>`, `msg.<lang>`: The translated version of the event title/message. The `<lang>` part must match the `lang` property of a target device. If devices use full locale (i.e. `fr_CA`), and no matching locale value is provided, pushd will fallback to a language only version of the value if any (i.e. `fr`). If no translation matches, the `title` or `msg` key is used. *The value can contain placeholders to other keys, see Message Template bellow.*
 - `data.<key>`: Key/values to be attached to the notification
 - `var.<key>`: Stores strings to be reused in `msg` and `<lang>.msg` contents
 - `sound`: The name of a sound file to be played. It must match a sound file name contained in you bundle app. (iOS only)

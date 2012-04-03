@@ -48,16 +48,20 @@ class PushServiceC2DM
         note =
             registration_id: task.info.regid
             collapse_key: task.payload.event.name
-        if not (task.subOptions & event.OPTION_IGNORE_MESSAGE) and message = task.payload.localizedMessage(task.info.lang) 
-            note['data.message'] = message
+        if not (task.subOptions & event.OPTION_IGNORE_MESSAGE)
+            if title = task.payload.localizedTitle(task.info.lang) 
+                note['data.title'] = title
+            if message = task.payload.localizedMessage(task.info.lang) 
+                note['data.message'] = message
         note["data.#{key}"] = value for key, value of task.payload.data
         @driver.send note, (err, msgid) =>
             done()
-            @logger?.error("C2DM Error #{err} for device #{task.device.id}")
             if err in ['InvalidRegistration', 'NotRegistered']
                 # Handle C2DM API feedback about no longer or invalid registrations
                 @logger?.warn("C2DM Automatic unregistration for device #{task.device.id}")
                 task.device.delete()
+            else if err
+                @logger?.error("C2DM Error #{err} for device #{task.device.id}")
 
 
 class PushServiceMPNS

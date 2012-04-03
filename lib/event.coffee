@@ -1,5 +1,6 @@
 device = require './device'
 async = require 'async'
+Payload = require('./payload').Payload
 
 
 class Event
@@ -29,11 +30,26 @@ class Event
                     cb(null)
 
     publish: (data, cb) ->
-        payload = new EventPayload(@, data)
+        try
+            payload = new Payload(data)
+            payload.event = @
+        catch e
+            # Invalid payload (empty, missing key or invalid key format)
+            cb(-1)
+            return
 
         @redis.sismember "events", @name, (err, exists) =>
             if not exists
                 cb(0) if cb
+                return
+
+            try
+                # Do not compile templates before to know there's some subscribers for the event
+                # and do not start serving subscribers if payload won't compile
+                payload.compile()
+            catch e
+                # Invalid payload (templates doesn't compile)
+                cb(-1)
                 return
 
             @forEachSubscribers (device, subOptions, done) =>
@@ -102,58 +118,6 @@ class Event
         , =>
             # all done
             finished(total) if finished
-
-
-class EventPayload
-    locale_format: /^[a-z]{2}_[A-Z]{2}$/
-
-    localizedMessage: (lang) ->
-        if @msg[lang]?
-            return @msg[lang]
-        # Try with lang only in case of full locale code (en_CA)
-        else if EventPayload::locale_format.test(lang) and @msg[lang[0..1]]?
-            return @msg[lang[0..1]]
-        else if @msg.default
-            return @msg.default
-
-
-    constructor: (@event, data) ->
-        throw new Error('Invalid payload') unless typeof data is 'object'
-
-        @msg = {}
-        @data = {}
-        @var = {}
-
-        # Read fields
-        for own key, value of data
-            if typeof value isnt 'string'
-                throw new Error("Invalid value for `#{key}'")
-            if key is 'msg'
-                @msg.default = value
-            else if key.length > 5 and key.indexOf('msg.') is 0
-                @msg[key[4..-1]] = value
-            else if key.length > 6 and key.indexOf('data.') is 0
-                @data[key[5..-1]] = value
-            else if key.length > 5 and key.indexOf('var.') is 0
-                @data[key[4..-1]] = value
-            else if key is 'sound'
-                @sound = value
-            else
-                throw new Error("Invalid field: #{key}")
-
-        # Resolve msg variables
-        for own lang, msg of @msg
-            msg.replace /\$\{(.*?)\}/g, (variable) ->
-                [prefix, key] = variable.split('.', 2)
-                if prefix not in ['var', 'data']
-                    throw new Error('Invalid variable ${#{variable}}')
-                if not @[prefix][key]?
-                    throw new Error('The ${#{variable}} does not exist')
-                return @[prefix][key]
-
-        # Detect empty payload
-        if ((lang for own lang of @msg).length + (key for own key of @data).length) == 0
-            throw new Error('Empty payload')
 
 
 exports.getEvent = (redis, pushservices, eventName) ->
