@@ -10,8 +10,14 @@
         "type": "git",
         "url": "git://github.com/rs/pushd.git"
     },
+    "bin": "./pushd.coffee",
+    "directories":
+    {
+        "lib": "./lib"
+    },
     "scripts":
     {
+        "start": "sudo node server.js",
         "test": "nodeunit tests"
     },
     "engines":
@@ -20,6 +26,7 @@
     },
     "dependencies":
     {
+        "coffee-script": "1.2.0",
         "apn": ">=1.1.6",
         "c2dm": "https://github.com/rs/node-c2dm/tarball/1.1.0",
         "mpns": ">=1.0.0",
@@ -30,7 +37,6 @@
     },
     "devDependencies":
     {
-        "nodeunit": ">=0.7.4",
-        "coffee-script": "1.2.0"
+        "nodeunit": ">=0.7.4"
     }
 }
