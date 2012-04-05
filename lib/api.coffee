@@ -3,40 +3,40 @@ filterFields = (params) ->
     fields[key] = val for own key, val of params when key in ['proto', 'regid', 'lang', 'badge', 'version']
     return fields
 
-exports.setupRestApi = (app, createDevice, authorize) ->
+exports.setupRestApi = (app, createSubscriber, authorize) ->
     authorize ?= (realm) ->
 
-    # Device registration
-    app.post '/devices', authorize('register'), (req, res) ->
+    # subscriber registration
+    app.post '/subscribers', authorize('register'), (req, res) ->
         try
             fields = filterFields(req.body)
-            createDevice fields, (device, created) ->
-                device.get (info) ->
-                    info.id = device.id
-                    res.header 'Location', "/device/#{device.id}"
+            createSubscriber fields, (subscriber, created) ->
+                subscriber.get (info) ->
+                    info.id = subscriber.id
+                    res.header 'Location', "/subscriber/#{subscriber.id}"
                     res.json info, if created then 201 else 200
         catch error
             res.json error: error.message, 400
 
-    # Get device info
-    app.get '/device/:device_id', authorize('register'), (req, res) ->
-        req.device.get (fields) ->
+    # Get subscriber info
+    app.get '/subscriber/:subscriber_id', authorize('register'), (req, res) ->
+        req.subscriber.get (fields) ->
             res.json fields, if fields? then 200 else 404
 
-    # Edit device info
-    app.post '/device/:device_id', authorize('register'), (req, res) ->
+    # Edit subscriber info
+    app.post '/subscriber/:subscriber_id', authorize('register'), (req, res) ->
         fields = filterFields(req.body)
-        req.device.set fields, (edited) ->
+        req.subscriber.set fields, (edited) ->
             res.send if edited then 204 else 404
 
-    # Unregister device
-    app.delete '/device/:device_id', authorize('register'), (req, res) ->
-        req.device.delete (deleted) ->
+    # Unregister subscriber
+    app.delete '/subscriber/:subscriber_id', authorize('register'), (req, res) ->
+        req.subscriber.delete (deleted) ->
             res.send if deleted then 204 else 404
 
-    # Get device subscriptions
-    app.get '/device/:device_id/subscriptions', authorize('register'), (req, res) ->
-        req.device.getSubscriptions (subs) ->
+    # Get subscriber subscriptions
+    app.get '/subscriber/:subscriber_id/subscriptions', authorize('register'), (req, res) ->
+        req.subscriber.getSubscriptions (subs) ->
             if subs?
                 subsAndOptions = {}
                 for sub in subs
@@ -45,28 +45,28 @@ exports.setupRestApi = (app, createDevice, authorize) ->
             else
                 res.send 404
 
-    # Get device subscription options
-    app.get '/device/:device_id/subscriptions/:event_id', authorize('register'), (req, res) ->
-        req.device.getSubscription req.event, (options) ->
+    # Get subscriber subscription options
+    app.get '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->
+        req.subscriber.getSubscription req.event, (options) ->
             if options?
                 res.json {ignore_message: (options & req.event.OPTION_IGNORE_MESSAGE) isnt 0}
             else
                 res.send 404
 
-    # Subscribe a device to an event
-    app.post '/device/:device_id/subscriptions/:event_id', authorize('register'), (req, res) ->
+    # Subscribe a subscriber to an event
+    app.post '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->
         options = 0
         if req.body.ignore_message
             options |= event.OPTION_IGNORE_MESSAGE
-        req.device.addSubscription req.event, options, (added) ->
-            if added? # added is null if device doesn't exist
+        req.subscriber.addSubscription req.event, options, (added) ->
+            if added? # added is null if subscriber doesn't exist
                 res.send if added then 201 else 204
             else
                 res.send 404
 
-    # Unsubscribe a device from an event
-    app.delete '/device/:device_id/subscriptions/:event_id', authorize('register'), (req, res) ->
-        res.device.removeSubscription req.event, (deleted) ->
+    # Unsubscribe a subscriber from an event
+    app.delete '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->
+        res.subscriber.removeSubscription req.event, (deleted) ->
             res.send if deleted then 204 else 404
 
     # Event stats

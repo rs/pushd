@@ -1,5 +1,5 @@
 redis = require 'redis'
-device = require '../lib/device'
+subscriber = require '../lib/subscriber'
 event = require '../lib/event'
 pushservices = require '../lib/pushservices'
 
@@ -7,14 +7,14 @@ pushservices = require '../lib/pushservices'
 class PushServiceFake
     total: 0
 
-    push: (device, subOptions, info, payload) ->
+    push: (subscriber, subOptions, info, payload) ->
         PushServiceFake::total++
 
-createDevice = (redis, cb) ->
+createSubscriber = (redis, cb) ->
     info =
         proto: 'apns'
         regid: 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660'
-    device.createDevice(redis, info, cb)
+    subscriber.createSubscriber(redis, info, cb)
 
 
 exports.publish =
@@ -29,8 +29,8 @@ exports.publish =
 
     tearDown: (cb) ->
         @event.delete =>
-            if @device?
-                @device.delete =>
+            if @subscriber?
+                @subscriber.delete =>
                     @redis.quit()
                     cb()
             else
@@ -47,12 +47,12 @@ exports.publish =
 
     testOneSubscriber: (test) ->
         test.expect(3)
-        createDevice @redis, (@device) =>
-            @device.addSubscription @event, 0, (added) =>
+        createSubscriber @redis, (@subscriber) =>
+            @subscriber.addSubscription @event, 0, (added) =>
                 test.ok added is true, 'Subscription added'
                 PushServiceFake::total = 0
                 @event.publish {msg: 'test'}, (total) =>
-                    test.equal PushServiceFake::total, 1, 'Event pushed to 1 device'
+                    test.equal PushServiceFake::total, 1, 'Event pushed to 1 subscriber'
                     test.equal total, 1, 'Return 1 notified subscribers'
                     test.done()
 
@@ -61,8 +61,8 @@ exports.publish =
         @event.publish {msg: 'test'}, =>
             @event.info (info) =>
                 test.ok info is null, 'No info on event with no subscribers'
-                createDevice @redis, (@device) =>
-                    @device.addSubscription @event, 0, (added) =>
+                createSubscriber @redis, (@subscriber) =>
+                    @subscriber.addSubscription @event, 0, (added) =>
                         test.ok added is true, 'Subscription added'
                         @event.publish {msg: 'test'}, =>
                             @event.info (info) =>
@@ -72,11 +72,11 @@ exports.publish =
 
     testDelete: (test) ->
         test.expect(2)
-        createDevice @redis, (@device) =>
-            @device.addSubscription @event, 0, (added) =>
+        createSubscriber @redis, (@subscriber) =>
+            @subscriber.addSubscription @event, 0, (added) =>
                 test.ok added is true, 'Subscription added'
                 @event.delete =>
-                    @device.getSubscriptions (subcriptions) =>
+                    @subscriber.getSubscriptions (subcriptions) =>
                         test.ok subcriptions.length is 0, 'Delete event unsubscribe subscribers'
                         test.done()
 

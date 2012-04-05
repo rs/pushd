@@ -3,7 +3,7 @@ dgram = require 'dgram'
 url = require 'url'
 Netmask = require('netmask').Netmask
 redis = require('redis').createClient()
-device = require './lib/device'
+subscriber = require './lib/subscriber'
 event = require './lib/event'
 settings = require './settings'
 logger = console
@@ -18,9 +18,9 @@ app.configure ->
     app.use(express.bodyParser())
     app.use(app.router)
 
-app.param 'device_id', (req, res, next, id) ->
+app.param 'subscriber_id', (req, res, next, id) ->
     try
-        req.device = device.getDevice(redis, req.params.device_id)
+        req.subscriber = subscriber.getSubscriber(redis, req.params.subscriber_id)
         delete req.params.id
         next()
     catch error
@@ -34,8 +34,8 @@ app.param 'event_id', (req, res, next, id) ->
     catch error
         res.json error: error.message, 400
 
-createDevice = (fields, cb) ->
-    device.createDevice redis, fields, cb
+createSubscriber = (fields, cb) ->
+    subscriber.createSubscriber(redis, fields, cb)
 
 authorize = (realm) ->
     if allow_from = settings.server?.acl?[realm]
@@ -52,7 +52,7 @@ authorize = (realm) ->
     else
         return (req, res, next) -> next()
 
-require('./lib/api').setupRestApi(app, createDevice, authorize)
+require('./lib/api').setupRestApi(app, createSubscriber, authorize)
 
 app.listen 80
 
@@ -80,10 +80,10 @@ udpApi.bind 80
 # Handle Apple Feedbacks
 apns = require 'apn'
 options = settings.apns
-options.feedback = (time, apnsDevice) ->
-    device.getDeviceFromRegId redis, 'apns', apnsDevice.hexToken(), (device) ->
-        device?.get (info) ->
+options.feedback = (time, apnsSubscriber) ->
+    subscriber.getSubscriberFromRegId redis, 'apns', apnsSubscriber.hexToken(), (subscriber) ->
+        subscriber?.get (info) ->
             if info.updated < time
-                logger.warn("APNS Automatic unregistration for device #{device.id}")
-                device.delete()
+                logger.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
+                subscriber.delete()
 feedback = new apns.Feedback(options)

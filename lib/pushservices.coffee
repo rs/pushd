@@ -7,14 +7,14 @@ c2dm = require 'c2dm'
 class PushServiceAPNS
     constructor: (conf, @logger) ->
         conf.errorCallback = (errCode, note) =>
-            @logger?.error("APNS Error #{errCode} for device #{note?.device?.id}")
+            @logger?.error("APNS Error #{errCode} for Subscriber #{note?.Subscriber?.id}")
         @driver = new apns.Connection(conf)
 
-    push: (device, subOptions, payload) ->
-        device.get (info) =>
+    push: (Subscriber, subOptions, payload) ->
+        Subscriber.get (info) =>
             note = new apns.Notification()
-            note.device = new apns.Device(info.regid)
-            note.device.id = device.id # used for error logging
+            note.Subscriber = new apns.Subscriber(info.regid)
+            note.Subscriber.id = Subscriber.id # used for error logging
             if not (subOptions & event.OPTION_IGNORE_MESSAGE) and alert = payload.localizedMessage(info.lang) 
                 note.alert = alert
             note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
@@ -22,7 +22,7 @@ class PushServiceAPNS
             note.payload = payload.data
             @driver.sendNotification note
             # On iOS we have to maintain the badge counter on the server
-            device.incr 'badge'
+            Subscriber.incr 'badge'
 
 
 class PushServiceC2DM
@@ -38,14 +38,14 @@ class PushServiceC2DM
         # Queue into an array waiting for C2DM login to complete
         @queue = []
 
-    push: (device, subOptions, payload) ->
+    push: (Subscriber, subOptions, payload) ->
         @queue.push
-            device: device,
+            Subscriber: Subscriber,
             subOptions: subOptions,
             payload: payload
 
     _pushTask: (task, done) ->
-        task.device.get (info) =>
+        task.Subscriber.get (info) =>
             note =
                 registration_id: info.regid
                 collapse_key: task.payload.event.name
@@ -59,16 +59,16 @@ class PushServiceC2DM
                 done()
                 if err in ['InvalidRegistration', 'NotRegistered']
                     # Handle C2DM API feedback about no longer or invalid registrations
-                    @logger?.warn("C2DM Automatic unregistration for device #{task.device.id}")
-                    task.device.delete()
+                    @logger?.warn("C2DM Automatic unregistration for Subscriber #{task.Subscriber.id}")
+                    task.Subscriber.delete()
                 else if err
-                    @logger?.error("C2DM Error #{err} for device #{task.device.id}")
+                    @logger?.error("C2DM Error #{err} for Subscriber #{task.Subscriber.id}")
 
 
 class PushServiceMPNS
     constructor: (@conf, @logger) ->
 
-    push: (device, subOptions, payload) ->
+    push: (Subscriber, subOptions, payload) ->
         # TO BE IMPLEMENTED
 
 
@@ -78,9 +78,9 @@ class PushServices
     addService: (protocol, service) ->
         @services[protocol] = service
 
-    push: (device, subOptions, payload, cb) ->
-        device.get (info) =>
-            if info then @services[info.proto]?.push(device, subOptions, payload)
+    push: (Subscriber, subOptions, payload, cb) ->
+        Subscriber.get (info) =>
+            if info then @services[info.proto]?.push(Subscriber, subOptions, payload)
             cb() if cb
 
 exports.PushServices = PushServices

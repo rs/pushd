@@ -1,4 +1,4 @@
-device = require './device'
+subscriber = require './subscriber'
 async = require 'async'
 Payload = require('./payload').Payload
 
@@ -52,9 +52,9 @@ class Event
                 cb(-1) if cb
                 return
 
-            @forEachSubscribers (device, subOptions, done) =>
+            @forEachSubscribers (subscriber, subOptions, done) =>
                 # action
-                @pushservices.push(device, subOptions, payload, done)
+                @pushservices.push(subscriber, subOptions, payload, done)
             , (totalSubscribers) =>
                 # finished
                 if totalSubscribers > 0
@@ -72,9 +72,9 @@ class Event
                         cb(0) if cb
 
     delete: (cb) ->
-        @forEachSubscribers (device, subOptions, done) =>
+        @forEachSubscribers (subscriber, subOptions, done) =>
             # action
-            device.removeSubscription(@, done)
+            subscriber.removeSubscription(@, done)
         , =>
             # finished
             @redis.multi()
@@ -85,19 +85,19 @@ class Event
                 .exec ->
                     cb() if cb
 
-    # Performs an action on each device subsribed to this event
+    # Performs an action on each subscriber subsribed to this event
     forEachSubscribers: (action, finished) ->
         if @name is 'broadcast'
             # if event is broadcast, do not treat score as subscription option, ignore it
-            performAction = (deviceId, subOptions) =>
+            performAction = (subscriberId, subOptions) =>
                 return (done) =>
-                    action(device.getDevice(@redis, deviceId), 0, done)
+                    action(subscriber.getSubscriber(@redis, subscriberId), 0, done)
         else
-            performAction = (deviceId, subOptions) =>
+            performAction = (subscriberId, subOptions) =>
                 return (done) =>
-                    action(device.getDevice(@redis, deviceId), subOptions, done)
+                    action(subscriber.getSubscriber(@redis, subscriberId), subOptions, done)
 
-        subscribersKey = if @name is 'boardcast' then 'devices' else "#{@key}:devs"
+        subscribersKey = if @name is 'boardcast' then 'subscribers' else "#{@key}:devs"
         page = 0
         perPage = 100
         total = 0
@@ -108,12 +108,12 @@ class Event
         , (done) =>
             # treat subscribers by packs of 100 with async to prevent from blocking the event loop
             # for too long on large subscribers lists
-            @redis.zrange subscribersKey, (page++ * perPage), (page * perPage + perPage), 'WITHSCORES', (err, deviceIdsAndOptions) =>
+            @redis.zrange subscribersKey, (page++ * perPage), (page * perPage + perPage), 'WITHSCORES', (err, subscriberIdsAndOptions) =>
                 tasks = []
-                for id, i in deviceIdsAndOptions by 2
-                    tasks.push performAction(id, deviceIdsAndOptions[i + 1])
+                for id, i in subscriberIdsAndOptions by 2
+                    tasks.push performAction(id, subscriberIdsAndOptions[i + 1])
                 async.series tasks, =>
-                    total += deviceIdsAndOptions.length / 2
+                    total += subscriberIdsAndOptions.length / 2
                     done()
         , =>
             # all done
