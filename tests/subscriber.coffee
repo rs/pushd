@@ -2,9 +2,8 @@ subscriber = require '../lib/subscriber'
 event = require '../lib/event'
 redis = require 'redis'
 
-createSubscriber = (proto, token, cb) ->
+createSubscriber = (redisClient, proto, token, cb) ->
     info = {proto: proto, token: token}
-    redisClient = redis.createClient()
     try
         subscriber.createSubscriber redisClient, info, cb
     catch e
@@ -12,35 +11,31 @@ createSubscriber = (proto, token, cb) ->
         throw e
 
 
-exports.testCreateSubscriber = (test) ->
-    test.expect(2)
-    createSubscriber 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (newSubscriber) =>
-        test.ok newSubscriber isnt null, 'Subscriber created'
-        test.ok newSubscriber.id isnt null, 'Subscriber has id'
-        newSubscriber.delete =>
-            newSubscriber.redis.quit()
-            test.done()
-
 exports.subscriber =
     setUp: (cb) ->
-        createSubscriber 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (@subscriber, @created, @tentatives) =>
-            cb()
+        @redis = redis.createClient()
+        @redis.multi()
+            .select(1)
+            .exec =>
+                createSubscriber @redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (@subscriber, @created, @tentatives) =>
+                    cb()
 
     tearDown: (cb) ->
         @subscriber.delete =>
-            @subscriber.redis.quit()
-            cb()
+            @redis.keys '*', (err, keys) =>
+                @redis.quit()
+                throw new Error("Some keys are left in db (#{keys.length})") if keys.length > 0
+                cb()
 
     testReregister: (test) ->
         test.expect(6)
         test.ok @created, 'Subscriber has been newly created'
         test.equal @tentatives, 0, 'Subscriber created with not retry'
-        createSubscriber 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (newSubscriber, created, tentatives) =>
+        createSubscriber @redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (newSubscriber, created, tentatives) =>
             test.ok created is false, 'Second subscriber not newly created'
             test.equal @tentatives, 0, 'Second subscriber created with not retry'
             test.ok newSubscriber isnt null, 'The subscriber have been created'
             test.equal newSubscriber?.id, @subscriber.id, 'Got the same subscriber if re-register same token'
-            newSubscriber?.redis?.quit()
             test.done()
 
     testGetInstanceFromtoken: (test) ->
@@ -52,7 +47,6 @@ exports.subscriber =
             subscriber.getSubscriberFromToken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6661', (sub) =>
                 test.ok sub is null, 'Get instance on unregistered token returns null'
                 test.done()
-
 
     testDefaults: (test) ->
         test.expect(7)

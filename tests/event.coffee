@@ -22,20 +22,28 @@ createSubscriber = (redis, cb) ->
 exports.publish =
     setUp: (cb) ->
         @redis = redis.createClient()
-        services = new pushservices.PushServices()
-        services.addService('apns', new PushServiceFake())
-        @event = event.getEvent(@redis, services, 'unit-test' + Math.round(Math.random() * 100000))
-        cb()
+        @redis.multi()
+            .select(1)
+            .flushdb()
+            .exec =>
+                services = new pushservices.PushServices()
+                services.addService('apns', new PushServiceFake())
+                @event = event.getEvent(@redis, services, 'unit-test' + Math.round(Math.random() * 100000))
+                cb()
 
     tearDown: (cb) ->
         @event.delete =>
             if @subscriber?
                 @subscriber.delete =>
-                    @redis.quit()
-                    cb()
+                    @redis.keys '*', (err, keys) =>
+                        @redis.quit()
+                        throw new Error("Some keys are left in db (#{keys.length})") if keys.length > 0
+                        cb()
             else
-                @redis.quit()
-                cb()
+                @redis.keys '*', (err, keys) =>
+                    @redis.quit()
+                    throw new Error("Some keys are left in db (#{keys.length})") if keys.length > 0
+                    cb()
 
     testNoSubscriber: (test) ->
         test.expect(2)
