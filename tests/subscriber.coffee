@@ -139,7 +139,7 @@ exports.subscriber =
 
     testAddSubscription: (test) ->
         test.expect(4)
-        testEvent = event.getEvent(@redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
+        testEvent = event.getEvent(@subscriber.redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
         test.equal @tentatives, 0, 'subscriber created with not retry'
         subscriber.getSubscriber(@subscriber.redis, 'invalidid').addSubscription testEvent, 0, (added) =>
             test.ok added is null, 'Cannot add subscription on unexisting subscriber'

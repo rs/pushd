@@ -8,6 +8,7 @@ class Event
     name_format: /^[a-zA-Z0-9:._-]{1,100}$/
 
     constructor: (@redis, @pushservices, @name) ->
+        throw new Error("Missing redis connection") if not redis?
         throw new Error('Invalid event name') if not Event::name_format.test @name
         @key = "event:#{@name}"
 
@@ -17,7 +18,7 @@ class Event
             # event info
             .hgetall(@key)
             # subscribers total
-            .zcard("#{@key}:devs")
+            .zcard("#{@key}:subs")
             .exec (err, results) =>
                 if (f for own f of results[0]).length
                     info = {total: results[1]}
@@ -97,7 +98,7 @@ class Event
                 return (done) =>
                     action(subscriber.getSubscriber(@redis, subscriberId), subOptions, done)
 
-        subscribersKey = if @name is 'boardcast' then 'subscribers' else "#{@key}:devs"
+        subscribersKey = if @name is 'boardcast' then 'subscribers' else "#{@key}:subs"
         page = 0
         perPage = 100
         total = 0

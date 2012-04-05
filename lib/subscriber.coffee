@@ -1,5 +1,6 @@
 event = require './event'
 crypto = require 'crypto'
+async = require 'async'
 
 class Subscriber
     protocols: ['apns', 'c2dm', 'mpns']
@@ -11,6 +12,7 @@ class Subscriber
     getInstanceFromRegId: (redis, proto, regid, cb) ->
         return until cb
 
+        throw new Error("Missing redis connection") if not redis?
         throw new Error("Invalid value for `proto'") if proto not in Subscriber::protocols
         throw new Error("Invalid value for `regid'") if not Subscriber::id_format[proto].test(regid)
 
@@ -34,6 +36,7 @@ class Subscriber
     create: (redis, fields, cb, tentatives=0) ->
         return until cb
 
+        throw new Error("Missing redis connection") if not redis?
         throw new Error("Missing mandatory `proto' field") if not fields?.proto?
         throw new Error("Missing mandatory `regid' field") if not fields?.regid?
 
@@ -96,7 +99,7 @@ class Subscriber
             # get subscriber's regid
             .hmget(@key, 'proto', 'regid')
             # gather subscriptions
-            .zrange("subscriber:#{@id}:subs", 0, -1)
+            .zrange("subscriber:#{@id}:evts", 0, -1)
             .exec (err, results) =>
                 [proto, regid] = results[0]
                 events = results[1]
@@ -108,14 +111,24 @@ class Subscriber
                     # remove subscriber info hash
                     .del(@key)
                     # remove subscription list
-                    .del("#{@key}:subs")
+                    .del("#{@key}:evts")
 
                 # unsubscribe subscriber from all subscribed events
-                multi.zrem "event:#{eventName}:devs", @id for eventName in events
+                for eventName in events
+                    multi.zrem("event:#{eventName}:subs", @id)
+                    # count subscribers after zrem
+                    multi.zcard("event:#{eventName}:subs")
 
-                multi.exec (err, results) ->
+                multi.exec (err, results) =>
                     @info = null # flush cache
-                    cb(results[1] is 1) if cb # true if deleted, false if did exist
+
+                    # check if some events have been rendered empty
+                    emptyEvents = []
+                    for eventName, i in events when results[4 + i + (i * 1) + 1] is 0
+                        emptyEvents.push event.getEvent(@redis, null, eventName)
+
+                    async.forEach emptyEvents, ((evt, done) => evt.delete(done)), =>
+                        cb(results[1] is 1) if cb # true if deleted, false if did exist
 
     get: (cb) ->
         return until cb
@@ -164,7 +177,9 @@ class Subscriber
                     cb(results[1]) if cb
                 else
                     @info = null # flush cache
-                    cb(null) if cb # null if subscriber doesn't exist
+                    # remove edited field
+                    @redis.del @key, =>
+                        cb(null) if cb # null if subscriber doesn't exist
 
     getSubscriptions: (cb) ->
         return unless cb
@@ -172,8 +187,8 @@ class Subscriber
             # check subscriber existance
             .zscore("subscribers", @id)
             # gather all subscriptions
-            .zrange("#{@key}:subs", 0, -1, 'WITHSCORES')
-            .exec (err, results) ->
+            .zrange("#{@key}:evts", 0, -1, 'WITHSCORES')
+            .exec (err, results) =>
                 if results[0]? # subscriber exists?
                     subscriptions = []
                     eventsWithOptions = results[1]
@@ -191,8 +206,8 @@ class Subscriber
             # check subscriber existance
             .zscore("subscribers", @id)
             # gather all subscriptions
-            .zscore("#{@key}:subs", event.name)
-            .exec (err, results) ->
+            .zscore("#{@key}:evts", event.name)
+            .exec (err, results) =>
                 if results[0]? and results[1]? # subscriber and subscription exists?
                     cb
                         event: event
@@ -205,9 +220,9 @@ class Subscriber
             # check subscriber existance
             .zscore("subscribers", @id)
             # add event to subscriber's subscriptions list
-            .zadd("#{@key}:subs", options, event.name)
+            .zadd("#{@key}:evts", options, event.name)
             # add subscriber to event's subscribers list
-            .zadd("#{event.key}:devs", options, @id)
+            .zadd("#{event.key}:subs", options, @id)
             # set the event created field if not already there (event is lazily created on first subscription)
             .hsetnx(event.key, "created", Math.round(new Date().getTime() / 1000))
             # lazily add event to the global event list
@@ -220,9 +235,16 @@ class Subscriber
                     # This is an exception so we don't first check subscriber existance before to add sub,
                     # but we manually rollback the subscription in case of error
                     @redis.multi()
-                        .del("#{@key}:subs", event.name)
-                        .srem(event.key, @id)
-                        .exec()
+                        # remove the wrongly created subs subscriber relation
+                        .del("#{@key}:evts", event.name)
+                        # remove the subscriber from the event's subscribers list
+                        .zrem("#{event.key}:subs", @id)
+                        # check if the subscriber list still exist after previous zrem
+                        .zcard("#{event.key}:subs")
+                        .exec (err, results) =>
+                            if results[2] is 0
+                                # The event subscriber list is now empty, clean it
+                                event.delete() # TOFIX possible race condition
                     cb(null) if cb # null if subscriber doesn't exist
 
     removeSubscription: (event, cb) ->
@@ -230,11 +252,11 @@ class Subscriber
             # check subscriber existance
             .zscore("subscribers", @id)
             # remove event from subscriber's subscriptions list
-            .zrem("#{@key}:subs", event.name)
+            .zrem("#{@key}:evts", event.name)
             # remove the subscriber from the event's subscribers list
-            .zrem("#{event.key}:devs", @id)
-            # check if the subscriber list still exist after previous srem
-            .exists(event.key)
+            .zrem("#{event.key}:subs", @id)
+            # check if the subscriber list still exist after previous zrem
+            .zcard("#{event.key}:subs")
             .exec (err, results) =>
                 if results[3] is 0
                     # The event subscriber list is now empty, clean it
