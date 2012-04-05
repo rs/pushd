@@ -1,4 +1,3 @@
-event = require '../event'
 async = require 'async'
 c2dm = require 'c2dm'
 
@@ -31,7 +30,7 @@ class PushServiceC2DM
             note =
                 registration_id: info.token
                 collapse_key: task.payload.event.name
-            if not (task.subOptions & event.OPTION_IGNORE_MESSAGE)
+            if task.subOptions?.ignore_message isnt true
                 if title = task.payload.localizedTitle(info.lang) 
                     note['data.title'] = title
                 if message = task.payload.localizedMessage(info.lang) 

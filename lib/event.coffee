@@ -92,11 +92,12 @@ class Event
             # if event is broadcast, do not treat score as subscription option, ignore it
             performAction = (subscriberId, subOptions) =>
                 return (done) =>
-                    action(subscriber.getSubscriber(@redis, subscriberId), 0, done)
+                    action(subscriber.getSubscriber(@redis, subscriberId), {}, done)
         else
             performAction = (subscriberId, subOptions) =>
+                options = {ignore_message: (subOptions & Event::OPTION_IGNORE_MESSAGE) isnt 0}
                 return (done) =>
-                    action(subscriber.getSubscriber(@redis, subscriberId), subOptions, done)
+                    action(subscriber.getSubscriber(@redis, subscriberId), options, done)
 
         subscribersKey = if @name is 'boardcast' then 'subscribers' else "#{@key}:subs"
         page = 0
