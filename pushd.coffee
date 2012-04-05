@@ -81,7 +81,7 @@ udpApi.bind 80
 apns = require 'apn'
 options = settings.apns
 options.feedback = (time, apnsSubscriber) ->
-    subscriber.getSubscriberFromRegId redis, 'apns', apnsSubscriber.hexToken(), (subscriber) ->
+    subscriber.getSubscriberFromToken redis, 'apns', apnsSubscriber.hexToken(), (subscriber) ->
         subscriber?.get (info) ->
             if info.updated < time
                 logger.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")

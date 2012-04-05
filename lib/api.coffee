@@ -1,6 +1,6 @@
 filterFields = (params) ->
     fields = {}
-    fields[key] = val for own key, val of params when key in ['proto', 'regid', 'lang', 'badge', 'version']
+    fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version']
     return fields
 
 exports.setupRestApi = (app, createSubscriber, authorize) ->

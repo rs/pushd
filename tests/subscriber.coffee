@@ -2,8 +2,8 @@ subscriber = require '../lib/subscriber'
 event = require '../lib/event'
 redis = require 'redis'
 
-createSubscriber = (proto, regid, cb) ->
-    info = {proto: proto, regid: regid}
+createSubscriber = (proto, token, cb) ->
+    info = {proto: proto, token: token}
     redisClient = redis.createClient()
     try
         subscriber.createSubscriber redisClient, info, cb
@@ -21,17 +21,17 @@ exports.testCreateSubscriber = (test) ->
             newSubscriber.redis.quit()
             test.done()
 
-exports.testCreateSubscriberWithInvalidRegid = (test) ->
+exports.testCreateSubscriberWithInvalidtoken = (test) ->
     test.expect(2)
-    regids =
+    tokens =
     [
         'FE66489F304DC75B8D6E8200DFF8A4 56E8DAEACEC428B427E9518741C92C6660'
         'invalid$'
     ]
-    for regid in regids
+    for token in tokens
         test.throws =>
-            createSubscriber 'apns', regid, =>
-        , Error, "Cannot create subscriber with invalid regid: #{regid}"
+            createSubscriber 'apns', token, =>
+        , Error, "Cannot create subscriber with invalid token: #{token}"
     test.done()
 
 
@@ -53,20 +53,20 @@ exports.subscriber =
             test.ok created is false, 'Second subscriber not newly created'
             test.equal @tentatives, 0, 'Second subscriber created with not retry'
             test.ok newSubscriber isnt null, 'The subscriber have been created'
-            test.equal newSubscriber?.id, @subscriber.id, 'Got the same subscriber if re-register same regid'
+            test.equal newSubscriber?.id, @subscriber.id, 'Got the same subscriber if re-register same token'
             newSubscriber?.redis?.quit()
             test.done()
 
-    testGetInstanceFromRegId: (test) ->
+    testGetInstanceFromtoken: (test) ->
         test.expect(5)
         test.ok @created, 'Subscriber has been newly created'
         test.equal @tentatives, 0, 'Subscriber created with not retry'
-        subscriber.getSubscriberFromRegId @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (dev) =>
+        subscriber.getSubscriberFromtoken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (dev) =>
             test.equal dev.id, @subscriber.id, 'Get instance from getid get the same subscriber'
-            subscriber.getSubscriberFromRegId @subscriber.redis, 'apns', 'fe66489f304dc75b8d6e8200dff8a456e8daeacec428b427e9518741c92c6660', (dev) =>
+            subscriber.getSubscriberFromtoken @subscriber.redis, 'apns', 'fe66489f304dc75b8d6e8200dff8a456e8daeacec428b427e9518741c92c6660', (dev) =>
                 test.equal dev.id, @subscriber.id, 'Get instance from getid with different case get the same subscriber'
-                subscriber.getSubscriberFromRegId @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6661', (dev) =>
-                    test.ok dev is null, 'Get instance on unregistered regid returns null'
+                subscriber.getSubscriberFromtoken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6661', (dev) =>
+                    test.ok dev is null, 'Get instance on unregistered token returns null'
                     test.done()
 
 
@@ -76,7 +76,7 @@ exports.subscriber =
         @subscriber.get (fields) =>
             test.notEqual fields, null, 'Returned fields are not null'
             test.ok fields?.proto?, 'The proto field is present'
-            test.ok fields?.regid?, 'The regid field is present'
+            test.ok fields?.token?, 'The token field is present'
             test.ok fields?.created?, 'The created field is present'
             test.ok fields?.updated?, 'The updated field is present'
             test.ok not fields?.badge?, 'Unexisting field is not present'

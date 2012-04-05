@@ -7,14 +7,14 @@ c2dm = require 'c2dm'
 class PushServiceAPNS
     constructor: (conf, @logger) ->
         conf.errorCallback = (errCode, note) =>
-            @logger?.error("APNS Error #{errCode} for Subscriber #{note?.Subscriber?.id}")
+            @logger?.error("APNS Error #{errCode} for subscriber #{note?.device?.subscriberId}")
         @driver = new apns.Connection(conf)
 
-    push: (Subscriber, subOptions, payload) ->
-        Subscriber.get (info) =>
+    push: (subscriber, subOptions, payload) ->
+        subscriber.get (info) =>
             note = new apns.Notification()
-            note.Subscriber = new apns.Subscriber(info.regid)
-            note.Subscriber.id = Subscriber.id # used for error logging
+            note.device = new apns.Device(info.token)
+            note.device.subscriberId = subscriber.id # used for error logging
             if not (subOptions & event.OPTION_IGNORE_MESSAGE) and alert = payload.localizedMessage(info.lang) 
                 note.alert = alert
             note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
@@ -22,7 +22,7 @@ class PushServiceAPNS
             note.payload = payload.data
             @driver.sendNotification note
             # On iOS we have to maintain the badge counter on the server
-            Subscriber.incr 'badge'
+            subscriber.incr 'badge'
 
 
 class PushServiceC2DM
@@ -38,16 +38,16 @@ class PushServiceC2DM
         # Queue into an array waiting for C2DM login to complete
         @queue = []
 
-    push: (Subscriber, subOptions, payload) ->
+    push: (subscriber, subOptions, payload) ->
         @queue.push
-            Subscriber: Subscriber,
+            subscriber: subscriber,
             subOptions: subOptions,
             payload: payload
 
     _pushTask: (task, done) ->
-        task.Subscriber.get (info) =>
+        task.subscriber.get (info) =>
             note =
-                registration_id: info.regid
+                registration_id: info.token
                 collapse_key: task.payload.event.name
             if not (task.subOptions & event.OPTION_IGNORE_MESSAGE)
                 if title = task.payload.localizedTitle(info.lang) 
@@ -59,16 +59,16 @@ class PushServiceC2DM
                 done()
                 if err in ['InvalidRegistration', 'NotRegistered']
                     # Handle C2DM API feedback about no longer or invalid registrations
-                    @logger?.warn("C2DM Automatic unregistration for Subscriber #{task.Subscriber.id}")
-                    task.Subscriber.delete()
+                    @logger?.warn("C2DM Automatic unregistration for subscriber #{task.subscriber.id}")
+                    task.subscriber.delete()
                 else if err
-                    @logger?.error("C2DM Error #{err} for Subscriber #{task.Subscriber.id}")
+                    @logger?.error("C2DM Error #{err} for subscriber #{task.subscriber.id}")
 
 
 class PushServiceMPNS
     constructor: (@conf, @logger) ->
 
-    push: (Subscriber, subOptions, payload) ->
+    push: (subscriber, subOptions, payload) ->
         # TO BE IMPLEMENTED
 
 
@@ -78,9 +78,9 @@ class PushServices
     addService: (protocol, service) ->
         @services[protocol] = service
 
-    push: (Subscriber, subOptions, payload, cb) ->
-        Subscriber.get (info) =>
-            if info then @services[info.proto]?.push(Subscriber, subOptions, payload)
+    push: (subscriber, subOptions, payload, cb) ->
+        subscriber.get (info) =>
+            if info then @services[info.proto]?.push(subscriber, subOptions, payload)
             cb() if cb
 
 exports.PushServices = PushServices

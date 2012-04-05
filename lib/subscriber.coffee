@@ -9,18 +9,18 @@ class Subscriber
         'c2dm': /^[a-zA-Z0-9_-]+$/
         'mpns': /^[a-z0-9]+$/ # TODO strictier format
 
-    getInstanceFromRegId: (redis, proto, regid, cb) ->
+    getInstanceFromtoken: (redis, proto, token, cb) ->
         return until cb
 
         throw new Error("Missing redis connection") if not redis?
         throw new Error("Invalid value for `proto'") if proto not in Subscriber::protocols
-        throw new Error("Invalid value for `regid'") if not Subscriber::id_format[proto].test(regid)
+        throw new Error("Invalid value for `token'") if not Subscriber::id_format[proto].test(token)
 
-        # Store regid in lowercase if format ignores case
+        # Store token in lowercase if format ignores case
         if Subscriber::id_format[proto].ignoreCase
-            regid = regid.toLowerCase()
+            token = token.toLowerCase()
 
-        redis.hget "regidmap", "#{proto}:#{regid}", (err, id) =>
+        redis.hget "tokenmap", "#{proto}:#{token}", (err, id) =>
             if id?
                 # looks like this subscriber is already registered
                 redis.exists "subscriber:#{id}", (err, exists) =>
@@ -28,31 +28,31 @@ class Subscriber
                         cb(new Subscriber(redis, id))
                     else
                         # duh!? the global list reference an unexisting object, fix this inconsistency and return no subscriber
-                        redis.hdel "regidmap", "#{proto}:#{regid}", =>
+                        redis.hdel "tokenmap", "#{proto}:#{token}", =>
                             cb(null)
             else
-                cb(null) # No subscriber for this regid
+                cb(null) # No subscriber for this token
 
     create: (redis, fields, cb, tentatives=0) ->
         return until cb
 
         throw new Error("Missing redis connection") if not redis?
         throw new Error("Missing mandatory `proto' field") if not fields?.proto?
-        throw new Error("Missing mandatory `regid' field") if not fields?.regid?
+        throw new Error("Missing mandatory `t' field") if not fields?.token?
 
-        # Store regid in lowercase if format ignores case
+        # Store token in lowercase if format ignores case
         if Subscriber::id_format[fields.proto].ignoreCase
-            fields.regid = fields.regid.toLowerCase()
+            fields.token = fields.token.toLowerCase()
 
         if tentatives > 10
             # exceeded the retry limit
             throw new Error "Can't find free uniq id"
 
-        # verify if regid is already registered
-        Subscriber::getInstanceFromRegId redis, fields.proto, fields.regid, (subscriber) =>
+        # verify if token is already registered
+        Subscriber::getInstanceFromtoken redis, fields.proto, fields.token, (subscriber) =>
             if subscriber?
                 # this subscriber is already registered
-                delete fields.regid
+                delete fields.token
                 delete fields.proto
                 subscriber.set fields, =>
                     cb(subscriber, created=false, tentatives)
@@ -70,8 +70,8 @@ class Subscriber
                             else
                                 fields.created = fields.updated = Math.round(new Date().getTime() / 1000)
                                 redis.multi()
-                                    # register subscriber regid to db id
-                                    .hsetnx("regidmap", "#{fields.proto}:#{fields.regid}", id)
+                                    # register subscriber token to db id
+                                    .hsetnx("tokenmap", "#{fields.proto}:#{fields.token}", id)
                                     # register subscriber to global list with protocol type stored as score
                                     .zadd("subscribers", @protocols.indexOf(fields.proto), id)
                                     # save fields
@@ -82,7 +82,7 @@ class Subscriber
                                             # Try again in order to get the peer created subscriber
                                             return Subscriber::create(redis, fields, cb, tentatives + 1)
                                         if not results[0]
-                                            # Unlikly race condition: another client registered the same regid at the same time
+                                            # Unlikly race condition: another client registered the same token at the same time
                                             # Rollback and retry the registration so we can return the peer subscriber id
                                             redis.del "subscriber:#{id}", =>
                                                 return Subscriber::create(redis, fields, cb, tentatives + 1)
@@ -96,16 +96,16 @@ class Subscriber
 
     delete: (cb) ->
         @redis.multi()
-            # get subscriber's regid
-            .hmget(@key, 'proto', 'regid')
+            # get subscriber's token
+            .hmget(@key, 'proto', 'token')
             # gather subscriptions
             .zrange("subscriber:#{@id}:evts", 0, -1)
             .exec (err, results) =>
-                [proto, regid] = results[0]
+                [proto, token] = results[0]
                 events = results[1]
                 multi = @redis.multi()
-                    # remove from subscriber regid to id map
-                    .hdel("regidmap", "#{proto}:#{regid}")
+                    # remove from subscriber token to id map
+                    .hdel("tokenmap", "#{proto}:#{token}")
                     # remove from global subscriber list
                     .zrem("subscribers", @id)
                     # remove subscriber info hash
@@ -147,8 +147,8 @@ class Subscriber
                     cb(@info = null) # null if subscriber doesn't exist + flush cache
 
     set: (fieldsAndValues, cb) ->
-        # TODO handle regid update needed for Android
-        throw new Error("Can't modify `regid` field") if fieldsAndValues.regid?
+        # TODO handle token update needed for Android
+        throw new Error("Can't modify `token` field") if fieldsAndValues.token?
         throw new Error("Can't modify `proto` field") if fieldsAndValues.proto?
         fieldsAndValues.updated = Math.round(new Date().getTime() / 1000)
         @redis.multi()
@@ -273,5 +273,5 @@ exports.protocols = Subscriber::protocols
 exports.getSubscriber = (redis, id) ->
     return new Subscriber(redis, id)
 
-exports.getSubscriberFromRegId = (redis, proto, regid, cb) ->
-    return Subscriber::getInstanceFromRegId(redis, proto, regid, cb)
+exports.getSubscriberFromtoken = (redis, proto, token, cb) ->
+    return Subscriber::getInstanceFromtoken(redis, proto, token, cb)

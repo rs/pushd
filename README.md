@@ -42,7 +42,7 @@ At first launch, your app must register with the push notification service to ge
 subscriber registration is performed through a HTTP REST API (see later for more details). Here is an example of a subscriber registration simulated using the curl command. As an example, we will register the iOS device with the registration id `FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660`. For iOS, we have to specify the `apns` protocol. We also set the subscriber language to `fr` for French and init the badge to `0`. We suppose the command is run on the same machine as pushd:
 
     $ curl -d proto=apns \
-           -d regid=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660 \
+           -d token=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660 \
            -d lang=fr \
            -d badge=0 \
            http://localhost/subscribers
@@ -51,7 +51,7 @@ In reply, we get the following JSON structure:
 
     {
         "proto":"apns",
-        "regid":"fe66489f304dc75b8d6e8200dff8a456e8daeacec428b427e9518741c92c6660",
+        "token":"fe66489f304dc75b8d6e8200dff8a456e8daeacec428b427e9518741c92c6660",
         "lang":"fr",
         "badge":0,
         "updated":1332953375,
@@ -104,7 +104,7 @@ Register a subscriber by POSTing on `/subscribers` with some subscriber informat
     > Content-Type: application/x-www-form-urlencoded
     > 
     > proto=apns
-    > regid=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660&
+    > token=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660&
     > lang=fr&
     > badge=0
     > 
@@ -117,7 +117,7 @@ Register a subscriber by POSTing on `/subscribers` with some subscriber informat
     <   "created":1332638892,
     <   "updated":1332638892,
     <   "proto":"apns",
-    <   "regid":"FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660",
+    <   "token":"FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660",
     <   "lang":"fr",
     <   "badge":10
     < }
@@ -130,7 +130,7 @@ Register a subscriber by POSTing on `/subscribers` with some subscriber informat
 	- `apns`: iOS (Apple Push Notification service)
 	- `c2dm`: Android (Cloud to subscriber Messaging)
 	- `mpns` Window Phone (Microsoft Push Notification Service)
-- `regid`: The subscriber registration id delivered by the platform's push notification service 
+- `token`: The device registration id delivered by the platform's push notification service 
 
 ##### Allowed parameters:
 
@@ -199,7 +199,7 @@ You may want to read informations stored about a subscriber id.
     <   "created":1332638892,
     <   "updated":1332638892,
     <   "proto":"apns",
-    <   "regid":"FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660",
+    <   "token":"FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660",
     <   "lang":"fr",
     <   "badge":10
     < }

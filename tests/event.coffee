@@ -13,7 +13,7 @@ class PushServiceFake
 createSubscriber = (redis, cb) ->
     info =
         proto: 'apns'
-        regid: 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660'
+        token: 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660'
     subscriber.createSubscriber(redis, info, cb)
 
 
