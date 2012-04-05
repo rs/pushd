@@ -89,6 +89,7 @@ class Device
                                             cb(new Device(redis, id), created=true, tentatives)
 
     constructor: (@redis, @id) ->
+        @info = null
         @key = "device:#{@id}"
 
     delete: (cb) ->
@@ -114,19 +115,24 @@ class Device
                 multi.zrem "event:#{eventName}:devs", @id for eventName in events
 
                 multi.exec (err, results) ->
+                    @info = null # flush cache
                     cb(results[1] is 1) if cb # true if deleted, false if did exist
 
     get: (cb) ->
         return until cb
-        @redis.hgetall @key, (err, info) =>
-            if info?.updated? # device exists
-                # transform numeric value to number type
-                for own key, value of info
-                    num = parseInt(value)
-                    info[key] = if num + '' is value then num else value
-                cb(info)
-            else
-                cb(null) # null if device doesn't exist
+        # returned cached value or perform query
+        if @info?
+            cb(@info)
+        else
+            @redis.hgetall @key, (err, @info) =>
+                if info?.updated? # device exists
+                    # transform numeric value to number type
+                    for own key, value of info
+                        num = parseInt(value)
+                        @info[key] = if num + '' is value then num else value
+                    cb(@info)
+                else
+                    cb(@info = null) # null if device doesn't exist + flush cache
 
     set: (fieldsAndValues, cb) ->
         # TODO handle regid update needed for Android
@@ -139,6 +145,7 @@ class Device
             # edit fields
             .hmset(@key, fieldsAndValues)
             .exec (err, results) =>
+                @info = null # flush cache
                 if results[0]? # device exists?
                     cb(true) if cb
                 else
@@ -154,8 +161,10 @@ class Device
             .hincrby(@key, field, 1)
             .exec (err, results) =>
                 if results[0]? # device exists?
+                    @info[field] = results[1] if @info? # update cache field
                     cb(results[1]) if cb
                 else
+                    @info = null # flush cache
                     cb(null) if cb # null if device doesn't exist
 
     getSubscriptions: (cb) ->

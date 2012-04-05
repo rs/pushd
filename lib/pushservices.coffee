@@ -10,18 +10,19 @@ class PushServiceAPNS
             @logger?.error("APNS Error #{errCode} for device #{note?.device?.id}")
         @driver = new apns.Connection(conf)
 
-    push: (device, subOptions, info, payload) ->
-        note = new apns.Notification()
-        note.device = new apns.Device(info.regid)
-        note.device.id = device.id # used for error logging
-        if not (subOptions & event.OPTION_IGNORE_MESSAGE) and alert = payload.localizedMessage(info.lang) 
-            note.alert = alert
-        note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
-        note.sound = payload.sound
-        note.payload = payload.data
-        @driver.sendNotification note
-        # On iOS we have to maintain the badge counter on the server
-        device.incr 'badge'
+    push: (device, subOptions, payload) ->
+        device.get (info) =>
+            note = new apns.Notification()
+            note.device = new apns.Device(info.regid)
+            note.device.id = device.id # used for error logging
+            if not (subOptions & event.OPTION_IGNORE_MESSAGE) and alert = payload.localizedMessage(info.lang) 
+                note.alert = alert
+            note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
+            note.sound = payload.sound
+            note.payload = payload.data
+            @driver.sendNotification note
+            # On iOS we have to maintain the badge counter on the server
+            device.incr 'badge'
 
 
 class PushServiceC2DM
@@ -37,37 +38,37 @@ class PushServiceC2DM
         # Queue into an array waiting for C2DM login to complete
         @queue = []
 
-    push: (device, subOptions, info, payload) ->
+    push: (device, subOptions, payload) ->
         @queue.push
             device: device,
             subOptions: subOptions,
-            info: info,
             payload: payload
 
     _pushTask: (task, done) ->
-        note =
-            registration_id: task.info.regid
-            collapse_key: task.payload.event.name
-        if not (task.subOptions & event.OPTION_IGNORE_MESSAGE)
-            if title = task.payload.localizedTitle(task.info.lang) 
-                note['data.title'] = title
-            if message = task.payload.localizedMessage(task.info.lang) 
-                note['data.message'] = message
-        note["data.#{key}"] = value for key, value of task.payload.data
-        @driver.send note, (err, msgid) =>
-            done()
-            if err in ['InvalidRegistration', 'NotRegistered']
-                # Handle C2DM API feedback about no longer or invalid registrations
-                @logger?.warn("C2DM Automatic unregistration for device #{task.device.id}")
-                task.device.delete()
-            else if err
-                @logger?.error("C2DM Error #{err} for device #{task.device.id}")
+        task.device.get (info) =>
+            note =
+                registration_id: info.regid
+                collapse_key: task.payload.event.name
+            if not (task.subOptions & event.OPTION_IGNORE_MESSAGE)
+                if title = task.payload.localizedTitle(info.lang) 
+                    note['data.title'] = title
+                if message = task.payload.localizedMessage(info.lang) 
+                    note['data.message'] = message
+            note["data.#{key}"] = value for key, value of task.payload.data
+            @driver.send note, (err, msgid) =>
+                done()
+                if err in ['InvalidRegistration', 'NotRegistered']
+                    # Handle C2DM API feedback about no longer or invalid registrations
+                    @logger?.warn("C2DM Automatic unregistration for device #{task.device.id}")
+                    task.device.delete()
+                else if err
+                    @logger?.error("C2DM Error #{err} for device #{task.device.id}")
 
 
 class PushServiceMPNS
     constructor: (@conf, @logger) ->
 
-    push: (device, subOptions, info, payload) ->
+    push: (device, subOptions, payload) ->
         # TO BE IMPLEMENTED
 
 
@@ -78,9 +79,8 @@ class PushServices
         @services[protocol] = service
 
     push: (device, subOptions, payload, cb) ->
-        device.get (fields) =>
-            if fields
-                @services[fields.proto]?.push(device, subOptions, fields, payload)
+        device.get (info) =>
+            if info then @services[info.proto]?.push(device, subOptions, payload)
             cb() if cb
 
 exports.PushServices = PushServices
