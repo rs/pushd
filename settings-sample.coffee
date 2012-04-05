@@ -1,5 +1,8 @@
 exports.server =
     access_log: yes
+    acl:
+        # restrict publish access to private networks
+        publish: ['127.0.0.1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']
 
 exports.apns =
     # Convert cert.cer and key.p12 using:

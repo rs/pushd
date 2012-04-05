@@ -1,6 +1,7 @@
 express = require 'express'
 dgram = require 'dgram'
 url = require 'url'
+Netmask = require('netmask').Netmask
 redis = require('redis').createClient()
 device = require './lib/device'
 event = require './lib/event'
@@ -36,7 +37,22 @@ app.param 'event_id', (req, res, next, id) ->
 createDevice = (fields, cb) ->
     device.createDevice redis, fields, cb
 
-require('./lib/api').setupRestApi(app, createDevice)
+authorize = (realm) ->
+    if allow_from = settings.server?.acl?[realm]
+        networks = []
+        for network in allow_from
+            networks.push new Netmask(network)
+        return (req, res, next) ->
+            if remoteAddr = req.socket and (req.socket.remoteAddress or (req.socket.socket and req.socket.socket.remoteAddress))
+                for network in networks
+                    if network.contains(remoteAddr)
+                        next()
+                        return
+            res.json error: 'Unauthorized', 403
+    else
+        return (req, res, next) -> next()
+
+require('./lib/api').setupRestApi(app, createDevice, authorize)
 
 app.listen 80
 
@@ -45,16 +61,19 @@ app.listen 80
 udpApi = dgram.createSocket("udp4")
 
 event_route = /^\/event\/([a-zA-Z0-9:._-]{1,100})$/
+udpApi.checkaccess = authorize('publish')
 udpApi.on 'message', (msg, rinfo) ->
     req = url.parse(msg.toString(), true)
-    if m = req.pathname.match(event_route)
-        try
-            event.getEvent(redis, pushservices, m[1]).publish(req.query)
-            logger.log("UDP #{req.pathname} 204") if settings.server?.access_log
-        catch error
-            logger.error(error.stack)
-    else
-        logger.log("UDP #{req.pathname} 404") if settings.server?.access_log
+    # emulate an express route middleware call
+    @checkaccess {socket: remoteAddress: rinfo.address}, {json: -> logger.log("UDP #{req.pathname} 403")}, ->
+        if m = req.pathname.match(event_route)
+            try
+                event.getEvent(redis, pushservices, m[1]).publish(req.query)
+                logger.log("UDP #{req.pathname} 204") if settings.server?.access_log
+            catch error
+                logger.error(error.stack)
+        else
+            logger.log("UDP #{req.pathname} 404") if settings.server?.access_log
 
 udpApi.bind 80
 

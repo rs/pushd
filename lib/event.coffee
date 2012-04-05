@@ -35,7 +35,7 @@ class Event
             payload.event = @
         catch e
             # Invalid payload (empty, missing key or invalid key format)
-            cb(-1)
+            cb(-1) if cb
             return
 
         @redis.sismember "events", @name, (err, exists) =>
@@ -49,7 +49,7 @@ class Event
                 payload.compile()
             catch e
                 # Invalid payload (templates doesn't compile)
-                cb(-1)
+                cb(-1) if cb
                 return
 
             @forEachSubscribers (device, subOptions, done) =>
