@@ -3,22 +3,12 @@ crypto = require 'crypto'
 async = require 'async'
 
 class Subscriber
-    protocols: ['apns', 'c2dm', 'mpns']
-    id_format:
-        'apns': /^[0-9a-f]{64}$/i
-        'c2dm': /^[a-zA-Z0-9_-]+$/
-        'mpns': /^[a-z0-9]+$/ # TODO strictier format
-
-    getInstanceFromtoken: (redis, proto, token, cb) ->
+    getInstanceFromToken: (redis, proto, token, cb) ->
         return until cb
 
         throw new Error("Missing redis connection") if not redis?
-        throw new Error("Invalid value for `proto'") if proto not in Subscriber::protocols
-        throw new Error("Invalid value for `token'") if not Subscriber::id_format[proto].test(token)
-
-        # Store token in lowercase if format ignores case
-        if Subscriber::id_format[proto].ignoreCase
-            token = token.toLowerCase()
+        throw new Error("Missing mandatory `proto' field") if not proto?
+        throw new Error("Missing mandatory `token' field") if not token?
 
         redis.hget "tokenmap", "#{proto}:#{token}", (err, id) =>
             if id?
@@ -38,18 +28,14 @@ class Subscriber
 
         throw new Error("Missing redis connection") if not redis?
         throw new Error("Missing mandatory `proto' field") if not fields?.proto?
-        throw new Error("Missing mandatory `t' field") if not fields?.token?
-
-        # Store token in lowercase if format ignores case
-        if Subscriber::id_format[fields.proto].ignoreCase
-            fields.token = fields.token.toLowerCase()
+        throw new Error("Missing mandatory `token' field") if not fields?.token?
 
         if tentatives > 10
             # exceeded the retry limit
             throw new Error "Can't find free uniq id"
 
         # verify if token is already registered
-        Subscriber::getInstanceFromtoken redis, fields.proto, fields.token, (subscriber) =>
+        Subscriber::getInstanceFromToken redis, fields.proto, fields.token, (subscriber) =>
             if subscriber?
                 # this subscriber is already registered
                 delete fields.token
@@ -72,8 +58,8 @@ class Subscriber
                                 redis.multi()
                                     # register subscriber token to db id
                                     .hsetnx("tokenmap", "#{fields.proto}:#{fields.token}", id)
-                                    # register subscriber to global list with protocol type stored as score
-                                    .zadd("subscribers", @protocols.indexOf(fields.proto), id)
+                                    # register subscriber to global list
+                                    .zadd("subscribers", 0, id)
                                     # save fields
                                     .hmset("subscriber:#{id}", fields)
                                     .exec (err, results) =>
@@ -268,10 +254,9 @@ class Subscriber
                     cb(null) if cb # null if subscriber doesn't exist
 
 exports.createSubscriber = Subscriber::create
-exports.protocols = Subscriber::protocols
 
 exports.getSubscriber = (redis, id) ->
     return new Subscriber(redis, id)
 
-exports.getSubscriberFromtoken = (redis, proto, token, cb) ->
-    return Subscriber::getInstanceFromtoken(redis, proto, token, cb)
+exports.getSubscriberFromToken = (redis, proto, token, cb) ->
+    return Subscriber::getInstanceFromToken(redis, proto, token, cb)

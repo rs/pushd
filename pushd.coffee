@@ -7,8 +7,11 @@ subscriber = require './lib/subscriber'
 event = require './lib/event'
 settings = require './settings'
 logger = console
-pushservices = require('./lib/pushservices').getPushServices(settings, logger)
+PushServices = require('./lib/pushservices').PushServices
 
+pushservices = new PushServices()
+for name, conf of settings when conf.enabled
+    pushservices.addService(name, new conf.class(conf, logger))
 
 app = express.createServer()
 
@@ -35,7 +38,9 @@ app.param 'event_id', (req, res, next, id) ->
         res.json error: error.message, 400
 
 createSubscriber = (fields, cb) ->
-    subscriber.createSubscriber(redis, fields, cb)
+    throw new Error("Invalid value for `proto'") unless service = pushservices.getService(fields.proto)
+    throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
+    return subscriber.createSubscriber(redis, fields, cb)
 
 authorize = (realm) ->
     if allow_from = settings.server?.acl?[realm]

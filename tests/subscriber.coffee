@@ -21,20 +21,6 @@ exports.testCreateSubscriber = (test) ->
             newSubscriber.redis.quit()
             test.done()
 
-exports.testCreateSubscriberWithInvalidtoken = (test) ->
-    test.expect(2)
-    tokens =
-    [
-        'FE66489F304DC75B8D6E8200DFF8A4 56E8DAEACEC428B427E9518741C92C6660'
-        'invalid$'
-    ]
-    for token in tokens
-        test.throws =>
-            createSubscriber 'apns', token, =>
-        , Error, "Cannot create subscriber with invalid token: #{token}"
-    test.done()
-
-
 exports.subscriber =
     setUp: (cb) ->
         createSubscriber 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (@subscriber, @created, @tentatives) =>
@@ -58,16 +44,14 @@ exports.subscriber =
             test.done()
 
     testGetInstanceFromtoken: (test) ->
-        test.expect(5)
+        test.expect(4)
         test.ok @created, 'Subscriber has been newly created'
         test.equal @tentatives, 0, 'Subscriber created with not retry'
-        subscriber.getSubscriberFromtoken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (dev) =>
-            test.equal dev.id, @subscriber.id, 'Get instance from getid get the same subscriber'
-            subscriber.getSubscriberFromtoken @subscriber.redis, 'apns', 'fe66489f304dc75b8d6e8200dff8a456e8daeacec428b427e9518741c92c6660', (dev) =>
-                test.equal dev.id, @subscriber.id, 'Get instance from getid with different case get the same subscriber'
-                subscriber.getSubscriberFromtoken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6661', (dev) =>
-                    test.ok dev is null, 'Get instance on unregistered token returns null'
-                    test.done()
+        subscriber.getSubscriberFromToken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (sub) =>
+            test.equal sub?.id, @subscriber.id, 'Get instance from getid get the same subscriber'
+            subscriber.getSubscriberFromToken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6661', (sub) =>
+                test.ok sub is null, 'Get instance on unregistered token returns null'
+                test.done()
 
 
     testDefaults: (test) ->

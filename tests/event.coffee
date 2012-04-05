@@ -6,6 +6,8 @@ pushservices = require '../lib/pushservices'
 
 class PushServiceFake
     total: 0
+    validateToken: (token) ->
+        return token
 
     push: (subscriber, subOptions, info, payload) ->
         PushServiceFake::total++
@@ -22,8 +24,6 @@ exports.publish =
         @redis = redis.createClient()
         services = new pushservices.PushServices()
         services.addService('apns', new PushServiceFake())
-        services.addService('c2dm', new PushServiceFake())
-        services.addService('mpns', new PushServiceFake())
         @event = event.getEvent(@redis, services, 'unit-test' + Math.round(Math.random() * 100000))
         cb()
 
