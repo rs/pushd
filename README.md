@@ -280,7 +280,7 @@ To test for the presence of a single subscription, perform a GET on the subscrip
 
 To generate notifications, your service must send events to pushd. The service doesn't have to know if a subscriber is subscribed to an event in order to send it, it just send all subscriptable events as they happen and pushd handles the rest.
 
-An event is a JSON object in a specific format sent to pushd either using HTTP POST or UDP datagrams.
+An event is some key/value pairs in a specific format sent to pushd either using HTTP POST or UDP datagrams.
 
 #### Event Message Format
 
@@ -331,9 +331,29 @@ The server will answer OK immediately. This doesn't mean the event has already b
 
 ##### UDP
 
-The UDP event posting API consists of a UDP datagram targeted at the UDP port 80 containing the URI of the event followed by the message content as query-string:
+The UDP event posting API consists of a UDP datagram targeted at the UDP port 80 containing the URI of the event followed by the message content as query-string compressed using gzip:
 
-    /event/user.newVideo:fkwhpd?msg=%24%7Bvar.name%7D+sent+a+new+video%3A+%24%7Bvar.title%7D&msg.fr=%24%7Bvar…
+    GZIP(/event/user.newVideo:fkwhpd?msg=%24%7Bvar.name%7D+sent+a+new+video%3A+%24%7Bvar.title%7D&msg.fr=%24%7Bvar…)
+
+Here is a simple PHP example to post an UDP event:
+
+    $pushdHost = '1.2.3.4';
+    $pushdPort = 80;
+    $eventName = 'user.newVideo:fkwhpd';
+    $payload = array
+    (
+        'msg' => '${var.name} sent a new video: ${var.title}',
+        'msg.fr' => '${var.name} a envoyé une nouvelle video: ${var.title}',
+        'sound' => 'newVideo.mp3',
+        'data.user_id' => 'fkwhpd',
+        'data.video_id' => '1k3dxk',
+        'var.name' => 'Jone Doe',
+        'var.title' => Super awesome video'
+    );
+    $msg = gzcompress('/event/' . urldecode($eventName) . '?' . http_build_query($payload));
+    $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
+    socket_sendto($socket, $msg, strlen($msg), 0, $pushdHost, $pushdPort);
+    socket_close($socket);
 
 
 License

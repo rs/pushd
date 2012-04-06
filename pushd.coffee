@@ -1,5 +1,6 @@
 express = require 'express'
 dgram = require 'dgram'
+zlib = require 'zlib'
 url = require 'url'
 Netmask = require('netmask').Netmask
 redis = require('redis').createClient()
@@ -68,17 +69,18 @@ udpApi = dgram.createSocket("udp4")
 event_route = /^\/event\/([a-zA-Z0-9:._-]{1,100})$/
 udpApi.checkaccess = authorize('publish')
 udpApi.on 'message', (msg, rinfo) ->
-    req = url.parse(msg.toString(), true)
-    # emulate an express route middleware call
-    @checkaccess {socket: remoteAddress: rinfo.address}, {json: -> logger.log("UDP #{req.pathname} 403")}, ->
-        if m = req.pathname.match(event_route)
-            try
-                new Event(redis, pushservices, m[1]).publish(req.query)
-                logger.log("UDP #{req.pathname} 204") if settings.server?.access_log
-            catch error
-                logger.error(error.stack)
-        else
-            logger.log("UDP #{req.pathname} 404") if settings.server?.access_log
+    zlib.unzip msg, (err, msg) =>
+        req = url.parse(msg.toString(), true)
+        # emulate an express route middleware call
+        @checkaccess {socket: remoteAddress: rinfo.address}, {json: -> logger.log("UDP #{req.pathname} 403")}, ->
+            if m = req.pathname.match(event_route)
+                try
+                    new Event(redis, pushservices, m[1]).publish(req.query)
+                    logger.log("UDP #{msg} 204") if settings.server?.access_log
+                catch error
+                    logger.error(error.stack)
+            else
+                logger.log("UDP #{req.pathname} 404") if settings.server?.access_log
 
 udpApi.bind settings?.server?.udp_port ? 80
 
