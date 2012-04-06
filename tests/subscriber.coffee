@@ -1,144 +1,196 @@
-subscriber = require '../lib/subscriber'
-event = require '../lib/event'
+should = require 'should'
+Subscriber = require('../lib/subscriber').Subscriber
+Event = require('../lib/event').Event
 redis = require 'redis'
 
 createSubscriber = (redisClient, proto, token, cb) ->
     info = {proto: proto, token: token}
     try
-        subscriber.createSubscriber redisClient, info, cb
+        Subscriber::create(redisClient, info, cb)
     catch e
         redisClient.quit()
         throw e
 
+describe 'Subscriber', ->
+    @redis = null
+    @event = null
+    @subscriber = null
+    @testEvent = null
+    @testEvent2 = null
 
-exports.subscriber =
-    setUp: (cb) ->
-        @redis = redis.createClient()
-        @redis.multi()
-            .select(1)
-            .exec =>
-                createSubscriber @redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (@subscriber, @created, @tentatives) =>
-                    cb()
+    xdescribe = (title, fn) =>
+        describe title, =>
+            fn()
 
-    tearDown: (cb) ->
-        @subscriber.delete =>
-            @redis.keys '*', (err, keys) =>
-                @redis.quit()
-                throw new Error("Some keys are left in db (#{keys.length})") if keys.length > 0
-                cb()
+            before (done) =>
+                @redis = redis.createClient()
+                @redis.multi()
+                    .select(1)
+                    .exec =>
+                        createSubscriber @redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (@subscriber, created, tentatives) =>
+                            @subscriber.should.be.an.instanceof Subscriber
+                            created.should.be.true
+                            tentatives.should.equal 0
+                            done()
 
-    testReregister: (test) ->
-        test.expect(6)
-        test.ok @created, 'Subscriber has been newly created'
-        test.equal @tentatives, 0, 'Subscriber created with not retry'
-        createSubscriber @redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (newSubscriber, created, tentatives) =>
-            test.ok created is false, 'Second subscriber not newly created'
-            test.equal @tentatives, 0, 'Second subscriber created with not retry'
-            test.ok newSubscriber isnt null, 'The subscriber have been created'
-            test.equal newSubscriber?.id, @subscriber.id, 'Got the same subscriber if re-register same token'
-            test.done()
+            after (done) =>
+                @subscriber.delete =>
+                    @redis.keys '*', (err, keys) =>
+                        keys.should.be.empty
+                        done()
 
-    testGetInstanceFromtoken: (test) ->
-        test.expect(4)
-        test.ok @created, 'Subscriber has been newly created'
-        test.equal @tentatives, 0, 'Subscriber created with not retry'
-        subscriber.getSubscriberFromToken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (sub) =>
-            test.equal sub?.id, @subscriber.id, 'Get instance from getid get the same subscriber'
-            subscriber.getSubscriberFromToken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6661', (sub) =>
-                test.ok sub is null, 'Get instance on unregistered token returns null'
-                test.done()
 
-    testDefaults: (test) ->
-        test.expect(7)
-        test.equal @tentatives, 0, 'Subscriber created with not retry'
-        @subscriber.get (fields) =>
-            test.notEqual fields, null, 'Returned fields are not null'
-            test.ok fields?.proto?, 'The proto field is present'
-            test.ok fields?.token?, 'The token field is present'
-            test.ok fields?.created?, 'The created field is present'
-            test.ok fields?.updated?, 'The updated field is present'
-            test.ok not fields?.badge?, 'Unexisting field is not present'
-            test.done()
+    xdescribe 'register twice', =>
+        it 'should not create a second object', (done) =>
+            createSubscriber @redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (subscriber, created, tentatives) =>
+                subscriber.should.be.an.instanceof Subscriber
+                created.should.be.false
+                tentatives.should.equal 0
+                subscriber.id.should.equal @subscriber.id
+                done()
 
-    testIncrement: (test) ->
-        test.expect(4)
-        test.equal @tentatives, 0, 'Subscriber created with not retry'
-        subscriber.getSubscriber(@subscriber.redis, 'invalidid').incr 'badge', (value) =>
-            test.ok value is null, 'Cannot increment field of an unexisting subscriber'
+    xdescribe 'get instance from token', =>
+        it 'should return the instance if already registered', (done) =>
+            Subscriber::getInstanceFromToken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660', (subscriber) =>
+                subscriber.should.be.an.instanceof Subscriber
+                subscriber.id.should.equal @subscriber.id
+                done()
+        it 'should return null if not registered', (done) =>
+            Subscriber::getInstanceFromToken @subscriber.redis, 'apns', 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6661', (subscriber) =>
+                should.not.exist subscriber
+                done()
+
+    xdescribe 'defaults', =>
+        it 'should have some default values', (done) =>
+            @subscriber.get (fields) =>
+                should.exist fields
+                fields.should.have.property 'proto'
+                fields.should.have.property 'token'
+                fields.should.have.property 'created'
+                fields.should.have.property 'updated'
+                fields.should.not.have.property 'badge'
+                done()
+
+    xdescribe 'incr()', =>
+        it 'should not increment field of an unexisting subscriber', (done) =>
+            subscriber = new Subscriber(@redis, 'invalidid')
+            subscriber.incr 'badge', (value) =>
+                should.not.exist value
+                done()
+        it 'should increment unexisting field to 1', (done) =>
             @subscriber.incr 'badge', (value) =>
-                test.equal value, 1, 'Increment unexisting field starts at 1'
-                @subscriber.incr 'badge', (value) =>
-                    test.equal value, 2, 'Exsiting value is correctly incremented'
-                    test.done()
+                value.should.equal 1
+                done()
+        it 'should increment an existing field', (done) =>
+            @subscriber.incr 'badge', (value) =>
+                value.should.equal 2
+                done()
 
-    testSet: (test) ->
-        test.expect(5)
-        test.equal @tentatives, 0, 'Subscriber created with not retry'
-        subscriber.getSubscriber(@subscriber.redis, 'invalidid').set {lang: 'us'}, (edited) =>
-            test.ok edited is null, 'Cannot edit an unexisting subscriber'
+    xdescribe 'set()', =>
+        it 'should not edit an unexisting subscriber', (done) =>
+            subscriber = new Subscriber(@subscriber.redis, 'invalidid')
+            subscriber.set {lang: 'us'}, (edited) =>
+                should.not.exist edited
+                done()
+        it 'should edit an existing subscriber', (done) =>
             @subscriber.set {lang: 'us', badge: 5}, (edited) =>
-                test.ok edited, 'Edit return true'
+                edited.should.be.true
                 @subscriber.get (fields) =>
-                    test.equal fields?.lang, 'us', 'Lang edited correctly'
-                    test.equal fields?.badge, 5, 'Badge edited correctly'
-                    test.done()
+                    should.exist fields
+                    fields.lang.should.equal 'us'
+                    fields.badge.should.equal 5
+                    done()
 
-    testDelete: (test) ->
-        test.expect(4)
-        test.equal @tentatives, 0, 'subscriber created with not retry'
-        @subscriber.delete (deleted) =>
-            test.ok deleted is true, 'Correctly deleted'
+    xdescribe 'delete()', =>
+        it 'should delete correctly', (done) =>
             @subscriber.delete (deleted) =>
-                test.ok deleted is false, 'Already deleted'
-                @subscriber.get (fields) =>
-                    test.equal fields, null, 'No longer exists'
-                    test.done()
+                deleted.should.be.true
+                done()
+        it 'should not delete an already deleted subscription', (done) =>
+            @subscriber.delete (deleted) =>
+                deleted.should.be.false
+                done()
+        it 'should no longer exist', (done) =>
+            @subscriber.get (fields) =>
+                should.not.exist fields
+                done()
 
-    testGetSubscription: (test) ->
-        test.expect(9)
-        testEvent = event.getEvent(@subscriber.redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
-        testEvent2 = event.getEvent(@subscriber.redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
-        test.equal @tentatives, 0, 'subscriber created with not retry'
-        subscriber.getSubscriber(@subscriber.redis, 'invalidid').getSubscriptions (subs) =>
-            test.ok subs is null, 'Cannot get subscriptions on unexisting subscriber'
+    xdescribe 'getSubscriptions()', =>
+        before =>
+            @testEvent = new Event(@redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
+            @testEvent2 = new Event(@redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
+
+        it 'should return null on unexisting subscriber', (done) =>
+            subscriber = new Subscriber(@redis, 'invalidid')
+            subscriber.getSubscriptions (subs) =>
+                should.not.exist subs
+                done()
+        it 'should initially return an empty subscriptions list', (done) =>
             @subscriber.getSubscriptions (subs) =>
-                test.equal subs.length, 0, 'Initially no subscriptions'
-                @subscriber.addSubscription testEvent, 0, (added) =>
-                    test.ok added is true, '1 subscription added'
-                    @subscriber.getSubscriptions (subs) =>
-                        test.equal subs.length, 1, '1 subscription retrieved'
-                        test.equal subs[0].event.name, testEvent.name, 'The added event is returned'
-                        @subscriber.getSubscription testEvent, (sub) =>
-                            test.equal sub?.event.name, testEvent.name, 'The subscription returns event'
-                            test.equal sub?.options, 0, 'The subscription returns options'
-                            @subscriber.getSubscription testEvent2, (sub) =>
-                                test.ok sub is null, 'The subscription does not exists'
-                                test.done()
+                should.exist subs
+                subs.should.be.empty
+                done()
+        it 'should return a subscription once subscribed', (done) =>
+            @subscriber.addSubscription @testEvent, 0, (added) =>
+                added.should.be.true
+                @subscriber.getSubscriptions (subs) =>
+                    subs.should.have.length 1
+                    subs[0].event.name.should.equal @testEvent.name
+                    done()
+        it 'should return the added subscription with getSubscription()', (done) =>
+            @subscriber.getSubscription @testEvent, (sub) =>
+                sub.should.have.property 'event'
+                sub.event.should.be.an.instanceof Event
+                sub.event.name.should.equal @testEvent.name
+                sub.should.have.property 'options'
+                sub.options.should.equal 0
+                done()
+        it 'should return null with getSubscription() on an unsubscribed event', (done) =>
+            @subscriber.getSubscription @testEvent2, (sub) =>
+                should.not.exist sub
+                done()
 
-    testAddSubscription: (test) ->
-        test.expect(4)
-        testEvent = event.getEvent(@subscriber.redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
-        test.equal @tentatives, 0, 'subscriber created with not retry'
-        subscriber.getSubscriber(@subscriber.redis, 'invalidid').addSubscription testEvent, 0, (added) =>
-            test.ok added is null, 'Cannot add subscription on unexisting subscriber'
-            @subscriber.addSubscription testEvent, 0, (added) =>
-                test.ok added is true, 'Added'
-                @subscriber.addSubscription testEvent, 0, (added) =>
-                    test.ok added is false, 'Already added'
-                    test.done()
+    xdescribe 'addSubscription()', =>
+        before =>
+            @testEvent = new Event(@redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
 
-    testRemoveSubscription: (test) ->
-        test.expect(6)
-        testEvent = event.getEvent(@subscriber.redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
-        test.equal @tentatives, 0, 'subscriber created with not retry'
-        subscriber.getSubscriber(@subscriber.redis, 'invalidid').removeSubscription testEvent, (removed) =>
-            test.ok removed is null, 'Cannot remove subscription on unexisting subscriber'
-            @subscriber.removeSubscription testEvent, (removed) =>
-                test.ok removed is false, 'Remove unexisting subscription'
-                @subscriber.addSubscription testEvent, 0, (added) =>
-                    test.ok added is true, 'Subscription added'
-                    @subscriber.removeSubscription testEvent, (removed) =>
-                        test.ok removed is true, 'Subscription removed'
-                        @subscriber.removeSubscription testEvent, (removed) =>
-                            test.ok removed is false, 'Subscription already removed'
-                            test.done()
+        it 'should not add subscription on unexisting subscriber', (done) =>
+            subscriber = new Subscriber(@subscriber.redis, 'invalidid')
+            subscriber.addSubscription @testEvent, 0, (added) =>
+                should.not.exist added
+                done()
+        it 'should add subscription correctly', (done) =>
+            @subscriber.addSubscription @testEvent, 0, (added) =>
+                added.should.be.true
+                done()
+        it 'should not add an already subscribed event', (done) =>
+            @subscriber.addSubscription @testEvent, 0, (added) =>
+                added.should.be.false
+                done()
+
+    xdescribe 'removeSubscription', =>
+        before =>
+            @testEvent = new Event(@redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
+
+        after (done) =>
+            @testEvent.delete(done)
+
+        it 'should not remove subscription on an unexisting subscription', (done) =>
+            subscriber = new Subscriber(@subscriber.redis, 'invalidid')
+            subscriber.removeSubscription @testEvent, (removed) =>
+                should.not.exist removed
+                done()
+        it 'should not remove an unsubscribed event', (done) =>
+            @subscriber.removeSubscription @testEvent, (removed) =>
+                removed.should.be.false
+                done()
+        it 'should remove an subscribed event correctly', (done) => 
+            @subscriber.addSubscription @testEvent, 0, (added) =>
+                added.should.be.true
+                @subscriber.removeSubscription @testEvent, (removed) =>
+                    removed.should.be.true
+                    done()
+        it 'should not remove an already removed subscription', (done) =>
+            @subscriber.removeSubscription @testEvent, (removed) =>
+                removed.should.be.false
+                done()

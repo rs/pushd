@@ -1,7 +1,5 @@
-subscriber = require './subscriber'
 async = require 'async'
 Payload = require('./payload').Payload
-
 
 class Event
     OPTION_IGNORE_MESSAGE: 1
@@ -88,16 +86,17 @@ class Event
 
     # Performs an action on each subscriber subsribed to this event
     forEachSubscribers: (action, finished) ->
+        Subscriber = require('./subscriber').Subscriber
         if @name is 'broadcast'
             # if event is broadcast, do not treat score as subscription option, ignore it
             performAction = (subscriberId, subOptions) =>
                 return (done) =>
-                    action(subscriber.getSubscriber(@redis, subscriberId), {}, done)
+                    action(new Subscriber(@redis, subscriberId), {}, done)
         else
             performAction = (subscriberId, subOptions) =>
                 options = {ignore_message: (subOptions & Event::OPTION_IGNORE_MESSAGE) isnt 0}
                 return (done) =>
-                    action(subscriber.getSubscriber(@redis, subscriberId), options, done)
+                    action(new Subscriber(@redis, subscriberId), options, done)
 
         subscribersKey = if @name is 'boardcast' then 'subscribers' else "#{@key}:subs"
         page = 0
@@ -121,6 +120,4 @@ class Event
             # all done
             finished(total) if finished
 
-
-exports.getEvent = (redis, pushservices, eventName) ->
-    return new Event(redis, pushservices, eventName)
+exports.Event = Event

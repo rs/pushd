@@ -3,11 +3,11 @@ dgram = require 'dgram'
 url = require 'url'
 Netmask = require('netmask').Netmask
 redis = require('redis').createClient()
-subscriber = require './lib/subscriber'
-event = require './lib/event'
 settings = require './settings'
-logger = console
+Subscriber = require('./lib/subscriber').Subscriber
+Event = require('./lib/event').Event
 PushServices = require('./lib/pushservices').PushServices
+logger = console
 
 pushservices = new PushServices()
 for name, conf of settings when conf.enabled
@@ -23,7 +23,7 @@ app.configure ->
 
 app.param 'subscriber_id', (req, res, next, id) ->
     try
-        req.subscriber = subscriber.getSubscriber(redis, req.params.subscriber_id)
+        req.subscriber = new Subscriber(redis, req.params.subscriber_id)
         delete req.params.id
         next()
     catch error
@@ -31,7 +31,7 @@ app.param 'subscriber_id', (req, res, next, id) ->
 
 app.param 'event_id', (req, res, next, id) ->
     try
-        req.event = event.getEvent(redis, pushservices, req.params.event_id)
+        req.event = new Event(redis, pushservices, req.params.event_id)
         delete req.params.event_id
         next()
     catch error
@@ -40,7 +40,7 @@ app.param 'event_id', (req, res, next, id) ->
 createSubscriber = (fields, cb) ->
     throw new Error("Invalid value for `proto'") unless service = pushservices.getService(fields.proto)
     throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
-    return subscriber.createSubscriber(redis, fields, cb)
+    return new Subscriber(redis, fields, cb)
 
 authorize = (realm) ->
     if allow_from = settings.server?.acl?[realm]
@@ -73,7 +73,7 @@ udpApi.on 'message', (msg, rinfo) ->
     @checkaccess {socket: remoteAddress: rinfo.address}, {json: -> logger.log("UDP #{req.pathname} 403")}, ->
         if m = req.pathname.match(event_route)
             try
-                event.getEvent(redis, pushservices, m[1]).publish(req.query)
+                new Event(redis, pushservices, m[1]).publish(req.query)
                 logger.log("UDP #{req.pathname} 204") if settings.server?.access_log
             catch error
                 logger.error(error.stack)
@@ -86,7 +86,7 @@ udpApi.bind 80
 apns = require 'apn'
 options = settings.apns
 options.feedback = (time, apnsSubscriber) ->
-    subscriber.getSubscriberFromToken redis, 'apns', apnsSubscriber.hexToken(), (subscriber) ->
+    Subscriber::getInstanceFromToken redis, 'apns', apnsSubscriber.hexToken(), (subscriber) ->
         subscriber?.get (info) ->
             if info.updated < time
                 logger.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")

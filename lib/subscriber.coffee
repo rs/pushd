@@ -1,6 +1,6 @@
-event = require './event'
 crypto = require 'crypto'
 async = require 'async'
+Event = require('./event').Event
 
 class Subscriber
     getInstanceFromToken: (redis, proto, token, cb) ->
@@ -111,7 +111,7 @@ class Subscriber
                     # check if some events have been rendered empty
                     emptyEvents = []
                     for eventName, i in events when results[4 + i + (i * 1) + 1] is 0
-                        emptyEvents.push event.getEvent(@redis, null, eventName)
+                        emptyEvents.push new Event(@redis, null, eventName)
 
                     async.forEach emptyEvents, ((evt, done) => evt.delete(done)), =>
                         cb(results[1] is 1) if cb # true if deleted, false if did exist
@@ -180,7 +180,7 @@ class Subscriber
                     eventsWithOptions = results[1]
                     for eventName, i in eventsWithOptions by 2
                         subscriptions.push
-                            event: event.getEvent(@redis, null, eventName)
+                            event: new Event(@redis, null, eventName)
                             options: eventsWithOptions[i + 1]
                     cb(subscriptions)
                 else
@@ -197,7 +197,7 @@ class Subscriber
                 if results[0]? and results[1]? # subscriber and subscription exists?
                     cb
                         event: event
-                        options: results[1]
+                        options: parseInt(results[1], 10)
                 else
                     cb(null) # null if subscriber doesn't exist        
 
@@ -253,10 +253,5 @@ class Subscriber
                 else
                     cb(null) if cb # null if subscriber doesn't exist
 
-exports.createSubscriber = Subscriber::create
 
-exports.getSubscriber = (redis, id) ->
-    return new Subscriber(redis, id)
-
-exports.getSubscriberFromToken = (redis, proto, token, cb) ->
-    return Subscriber::getInstanceFromToken(redis, proto, token, cb)
+exports.Subscriber = Subscriber
