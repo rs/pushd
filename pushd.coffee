@@ -40,7 +40,7 @@ app.param 'event_id', (req, res, next, id) ->
 createSubscriber = (fields, cb) ->
     throw new Error("Invalid value for `proto'") unless service = pushservices.getService(fields.proto)
     throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
-    return new Subscriber(redis, fields, cb)
+    Subscriber::create(redis, fields, cb)
 
 authorize = (realm) ->
     if allow_from = settings.server?.acl?[realm]
