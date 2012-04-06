@@ -59,7 +59,7 @@ authorize = (realm) ->
 
 require('./lib/api').setupRestApi(app, createSubscriber, authorize)
 
-app.listen 80
+app.listen settings?.server?.tcp_port ? 80
 
 
 # UDP Event API
@@ -80,7 +80,7 @@ udpApi.on 'message', (msg, rinfo) ->
         else
             logger.log("UDP #{req.pathname} 404") if settings.server?.access_log
 
-udpApi.bind 80
+udpApi.bind settings?.server?.udp_port ? 80
 
 # Handle Apple Feedbacks
 apns = require 'apn'

@@ -1,4 +1,6 @@
 exports.server =
+    tcp_port: 80
+    udp_port: 80
     access_log: yes
     acl:
         # restrict publish access to private networks
