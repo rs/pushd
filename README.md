@@ -310,7 +310,7 @@ Here is an example of an event message using translations and templating (spaces
 
 ##### HTTP
 
-To send an event to pushd over HTTP, POST the JSON object to the `/event/EVENT_NAME` endpoint of the pushd server:
+To send an event to pushd over HTTP, POST some urlencoded key/value pairs to the `/event/EVENT_NAME` endpoint of the pushd server:
 
     > POST /event/user.newVideo:fkwhpd HTTP/1.1
     > Content-Type: application/x-www-form-urlencoded
