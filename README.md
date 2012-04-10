@@ -63,7 +63,7 @@ Your app must save the `id` field value, it will be used for all further communi
 
 ### Ping
 
-Once the app is registered, it has to ping the pushd server each time the app is launched to let pushd know the subscriber still exists. The subscriber may have been unregistered automatically in case of repeated errors for instance. To ping pushd, you perform a POST on the `/subscriber/subscriber_ID` url as follow:
+Once the app is registered, it has to ping the pushd server each time the app is launched to let pushd know the subscriber still exists. The subscriber may have been unregistered automatically in case of repeated errors for instance. To ping pushd, you perform a POST on the `/subscriber/SUBSCRIBER_ID` url as follow:
 
     $ curl -d lang=fr -d badge=0 http://localhost/subscriber/J8lHY4X1XkU
 
@@ -148,7 +148,7 @@ Register a subscriber by POSTing on `/subscribers` with some subscriber informat
 
 On each app launch, it is highly recommended to update your subscriber information in order to inform pushd your subscriber is still alive and registered for notifications. Do not forget to check if the app notifications hasn't been disabled since the last launch, and call `DELETE` if so. If this request returns a 404 error, it means your subscriber registration has been cancelled by pushd. You must then delete the previously obtained subscriber id and restart the registration process for this subscriber. Registration can be cancelled after pushd error count for the subscriber reached a predefined threshold or if the target platform push service informed pushd about an inactive subscriber (i.e. Apple Feedback Service).
 
-    > POST /subscriber/subscriber_ID HTTP/1.1
+    > POST /subscriber/SUBSCRIBER_ID HTTP/1.1
     > Content-Type: application/x-www-form-urlencoded
     >
     > lang=fr&badge=0
@@ -174,7 +174,7 @@ NOTE: this method should be called each time the app is opened to inform pushd t
 
 When the user chooses to disable notifications from within your app, you can delete the subscriber from pushd so pushd won't send further push notifications.
 
-    > DELETE /subscriber/subscriber_ID HTTP/1.1
+    > DELETE /subscriber/SUBSCRIBER_ID HTTP/1.1
     >
     ---
     < HTTP/1.1 204 No Content
@@ -189,7 +189,7 @@ When the user chooses to disable notifications from within your app, you can del
 
 You may want to read informations stored about a subscriber id.
 
-    > GET /subscriber/subscriber_ID HTTP/1.1
+    > GET /subscriber/SUBSCRIBER_ID HTTP/1.1
     >
     ---
     < HTTP/1.1 200 Ok
@@ -215,9 +215,9 @@ You may want to read informations stored about a subscriber id.
 
 For pushd, an event is represented as a simple string. By default a subscriber won't receive push notifications other than broadcasts or direct messages if it’s not subscribed to events. Events are text and/or data sent by your service on pushd. Pushd's role is to convert this event into a push notification for any subscribed subscriber.
 
-You subscribe a previously registered subscriber by POSTing on `/subscriber/subscriber_ID/subscriptions/EVENT_NAME` where `EVENT_NAME` is a unique string code for the event. You may post an option parameter to configure the subscription.
+You subscribe a previously registered subscriber by POSTing on `/subscriber/SUBSCRIBER_ID/subscriptions/EVENT_NAME` where `EVENT_NAME` is a unique string code for the event. You may post an option parameter to configure the subscription.
 
-	> POST /subscriber/subscriber_ID/subscriptions/EVENT_NAME HTTP/1.1
+	> POST /subscriber/SUBSCRIBER_ID/subscriptions/EVENT_NAME HTTP/1.1
 	> Content-Type: application/x-www-form-urlencoded
     >
 	> ignore_message=1
@@ -240,7 +240,7 @@ You subscribe a previously registered subscriber by POSTing on `/subscriber/subs
 
 To unsubscribe from an event, perform a DELETE on the subscription URL.
 
-	> DELETE /subscriber/subscriber_ID/subscriptions/EVENT_NAME HTTP/1.1
+	> DELETE /subscriber/SUBSCRIBER_ID/subscriptions/EVENT_NAME HTTP/1.1
     >
     ---
 	< HTTP/1.1 204 No Content
@@ -253,9 +253,9 @@ To unsubscribe from an event, perform a DELETE on the subscription URL.
 
 #### List subscribers’ Subscriptions
 
-To get the list of events a subscriber is subscribed to, perform a GET on the `/subscriber/subscriber_ID/subscriptions`.
+To get the list of events a subscriber is subscribed to, perform a GET on the `/subscriber/SUBSCRIBER_ID/subscriptions`.
 
-    > GET /subscriber/subscriber_ID/subscriptions HTTP/1.1
+    > GET /subscriber/SUBSCRIBER_ID/subscriptions HTTP/1.1
     >
     ---
     < HTTP/1.1 200 Ok
@@ -268,7 +268,7 @@ To get the list of events a subscriber is subscribed to, perform a GET on the `/
 
 To test for the presence of a single subscription, perform a GET on the subscription URL
 
-    > GET /subscriber/subscriber_ID/subscriptions/EVENT_NAME HTTP/1.1
+    > GET /subscriber/SUBSCRIBER_ID/subscriptions/EVENT_NAME HTTP/1.1
     >
     ---
     < HTTP/1.1 200 Ok
@@ -333,7 +333,7 @@ The server will answer OK immediately. This doesn't mean the event has already b
 
 The UDP event posting API consists of a UDP datagram targeted at the UDP port 80 containing the URI of the event followed by the message content as query-string compressed using gzip:
 
-    GZIP(/event/user.newVideo:fkwhpd?msg=%24%7Bvar.name%7D+sent+a+new+video%3A+%24%7Bvar.title%7D&msg.fr=%24%7Bvar…)
+    GZIP(POST /event/user.newVideo:fkwhpd?msg=%24%7Bvar.name%7D+sent+a+new+video%3A+%24%7Bvar.title%7D&msg.fr=%24%7Bvar…)
 
 Here is a simple PHP example to post an UDP event:
 
@@ -350,10 +350,49 @@ Here is a simple PHP example to post an UDP event:
         'var.name' => 'Jone Doe',
         'var.title' => Super awesome video'
     );
-    $msg = gzcompress('/event/' . urldecode($eventName) . '?' . http_build_query($payload));
+    $msg = gzcompress('POST /event/' . urldecode($eventName) . '?' . http_build_query($payload));
     $socket = socket_create(AF_INET, SOCK_DGRAM, SOL_UDP);
     socket_sendto($socket, $msg, strlen($msg), 0, $pushdHost, $pushdPort);
     socket_close($socket);
+
+#### Event Statistics
+
+When an event get at least one subscriber, pushd start to account some statistics on the event. Those stats persists until the event keep at least one subscriber. Those statistics can be used for monitoring or to present stats about the event to the user like approx number of notification per day for this event.
+
+To get statistics from an event, perform a GET on `/event/EVENT_NAME`:
+
+    > GET /event/EVENT_NAME HTTP/1.1
+    >
+    ---
+    < HTTP/1.1 200 Ok
+    < Content-Type: application/json
+    <
+    < {
+    <   "created": 1334097188,
+    <   "total": 154
+    < }
+
+##### Return Codes
+
+- `200` Statistics returned
+- `404` The specified event does not exist
+
+#### Event Purge
+
+When the application data provider know about a particular event will no longer be available, it can force pushd to forget about it and unsubscribe all current subscribers from it. To purge an event, perform a DELETE on `/event/EVENT_NAME`
+
+    > DELETE /event/EVENT_NAME HTTP/1.1
+    >
+    ---
+    < HTTP/1.1 204 Ok
+    <
+
+The DELETE method is also available thrus UDP.
+
+##### Return Codes
+
+- `204` Event deleted
+- `404` The specified event does not exist
 
 
 License

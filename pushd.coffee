@@ -70,17 +70,28 @@ event_route = /^\/event\/([a-zA-Z0-9:._-]{1,100})$/
 udpApi.checkaccess = authorize('publish')
 udpApi.on 'message', (msg, rinfo) ->
     zlib.unzip msg, (err, msg) =>
-        req = url.parse(msg.toString(), true)
+        if err or not msg.toString()
+            logger.error("UDP Cannot decode message: #{err}")
+            return
+        [method, msg] = msg.toString().split(/\s+/, 2)
+        if not msg then [msg, method] = [method, 'POST']
+        req = url.parse(msg ? '', true)
+        method = method.toUpperCase()
         # emulate an express route middleware call
-        @checkaccess {socket: remoteAddress: rinfo.address}, {json: -> logger.log("UDP #{req.pathname} 403")}, ->
-            if m = req.pathname.match(event_route)
+        @checkaccess {socket: remoteAddress: rinfo.address}, {json: -> logger.log("UDP/#{method} #{req.pathname} 403")}, ->
+            status = 404
+            if m = req.pathname?.match(event_route)
                 try
-                    new Event(redis, pushservices, m[1]).publish(req.query)
-                    logger.log("UDP #{msg} 204") if settings.server?.access_log
+                    event = new Event(redis, pushservices, m[1])
+                    status = 204
+                    switch method
+                        when 'POST' then event.publish(req.query)
+                        when 'DELETE' then event.delete()
+                        else status = 404
                 catch error
                     logger.error(error.stack)
-            else
-                logger.log("UDP #{req.pathname} 404") if settings.server?.access_log
+                    return
+            logger.log("UDP/#{method} #{req.pathname} #{status}") if settings.server?.access_log
 
 udpApi.bind settings?.server?.udp_port ? 80
 

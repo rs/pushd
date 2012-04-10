@@ -80,6 +80,6 @@ exports.setupRestApi = (app, createSubscriber, authorize) ->
         req.event.publish(req.body)
 
     # Delete an event
-    app.delete '/event/:event_id', authorize('register'), (req, res) ->
+    app.delete '/event/:event_id', authorize('publish'), (req, res) ->
         req.event.delete (deleted) ->
             res.send if deleted 204 else 404
