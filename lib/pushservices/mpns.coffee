@@ -6,7 +6,7 @@ class PushServiceMPNS
         if PushServiceMPNS::tokenFormat.test(token)
             return token
 
-    constructor: (@conf, @logger) ->
+    constructor: (@conf, @logger, tokenResolver) ->
 
     push: (subscriber, subOptions, payload) ->
         # TO BE IMPLEMENTED

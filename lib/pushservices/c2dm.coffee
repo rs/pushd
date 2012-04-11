@@ -7,7 +7,7 @@ class PushServiceC2DM
         if PushServiceC2DM::tokenFormat.test(token)
             return token
 
-    constructor: (conf, @logger) ->
+    constructor: (conf, @logger, tokenResolver) ->
         conf.concurrency ?= 10
         conf.keepAlive = true
         @driver = new c2dm.C2DM(conf)

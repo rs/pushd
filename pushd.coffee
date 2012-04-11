@@ -10,9 +10,17 @@ Event = require('./lib/event').Event
 PushServices = require('./lib/pushservices').PushServices
 logger = console
 
+createSubscriber = (fields, cb) ->
+    throw new Error("Invalid value for `proto'") unless service = pushservices.getService(fields.proto)
+    throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
+    Subscriber::create(redis, fields, cb)
+
+tokenResolver = (proto, token, cb) ->
+    Subscriber::getInstanceFromToken redis, proto, token, cb
+
 pushservices = new PushServices()
 for name, conf of settings when conf.enabled
-    pushservices.addService(name, new conf.class(conf, logger))
+    pushservices.addService(name, new conf.class(conf, logger, tokenResolver))
 
 app = express.createServer()
 
@@ -37,11 +45,6 @@ app.param 'event_id', (req, res, next, id) ->
         next()
     catch error
         res.json error: error.message, 400
-
-createSubscriber = (fields, cb) ->
-    throw new Error("Invalid value for `proto'") unless service = pushservices.getService(fields.proto)
-    throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
-    Subscriber::create(redis, fields, cb)
 
 authorize = (realm) ->
     if allow_from = settings.server?.acl?[realm]
@@ -94,14 +97,3 @@ udpApi.on 'message', (msg, rinfo) ->
             logger.log("UDP/#{method} #{req.pathname} #{status}") if settings.server?.access_log
 
 udpApi.bind settings?.server?.udp_port ? 80
-
-# Handle Apple Feedbacks
-apns = require 'apn'
-options = settings.apns
-options.feedback = (time, apnsSubscriber) ->
-    Subscriber::getInstanceFromToken redis, 'apns', apnsSubscriber.hexToken(), (subscriber) ->
-        subscriber?.get (info) ->
-            if info.updated < time
-                logger.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
-                subscriber.delete()
-feedback = new apns.Feedback(options)

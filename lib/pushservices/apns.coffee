@@ -6,10 +6,20 @@ class PushServiceAPNS
         if PushServiceAPNS::tokenFormat.test(token)
             return token.toLowerCase()
 
-    constructor: (conf, @logger) ->
+    constructor: (conf, @logger, tokenResolver) ->
         conf.errorCallback = (errCode, note) =>
             @logger?.error("APNS Error #{errCode} for subscriber #{note?.device?.subscriberId}")
         @driver = new apns.Connection(conf)
+
+        # Handle Apple Feedbacks
+        conf.feedback = (time, apnsSubscriber) ->
+            tokenResolver 'apns', apnsSubscriber.hexToken(), (subscriber) =>
+                subscriber?.get (info) ->
+                    if info.updated < time
+                        @logger.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
+                        subscriber.delete()
+        @feedback = new apns.Feedback(conf)
+
 
     push: (subscriber, subOptions, payload) ->
         subscriber.get (info) =>
