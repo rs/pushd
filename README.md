@@ -1,7 +1,7 @@
 Universal Mobile Push Daemon
 ============================
 
-*Pushd* is a free and open source software which provides a unified push service for server-side notification to apps on mobile devices. With pushd you can push notification to any supported mobile platform. Pushd takes care of which device is subscribed to which event and is designed to support an unlimited amount of subscribable events.
+*Pushd* is a pluggable unified push server for server-side notification to apps on mobile devices. With pushd you can send push notifications to any supported mobile platform from a single entry point. Pushd takes care of which device is subscribed to which event and is designed to support an unlimited amount of subscribable events.
 
 ![Architecture Overview](https://github.com/rs/pushd/raw/master/doc/overview.png)
 
@@ -9,6 +9,7 @@ Features
 --------
 
 - Multi protocols (APNs (iOS), C2DM (Android), MPNS (Windows Phone)
+- Pluggable protocols
 - Register unlimited number of subscribers (device)
 - Subscribe to unlimited number of events
 - Automatic badge increment for iOS
@@ -18,7 +19,7 @@ Features
 - Broadcast
 - Events statistics
 - Automatic failing subscriber unregistration
-- Apple Feedback API support
+- Built-in Apple Feedback API handling
 - Redis backend
 - Fracking fast!
 
@@ -31,6 +32,14 @@ Installation
 - Configure the server: `cp settings-sample.coffee settings.coffee && vi settings.coffee`
 - Start redis: `redis-server`
 - Start the server: `sudo coffee pushd.coffee`
+
+Glossary
+--------
+
+- `Application Data Provider`: The service emitting `Events` (i.e: other users actions) to be notified to `Subscribers` (i.e.: mobiles app)
+- `Subscribers`: Entities wanting to be notified about certain type of `Events`. There's two kind of subscribers: offline subscribers and online subscribers. The current implementation of pushd does only support offline subscribers. Difference between online and offline subscribers is that online subscribers are required to stay connected to maintain subscriptions while offline subscribers are persisted in pushd database, and only have to instruct pushd when they change their status (subscriptions etc.).
+- `Event`: A string with associated metadata representing an action performed on the `Application Data Provider`. Events are emitted by the `Application Data Provider` (i.e.: a web site or your application's server-side backend), and `Subscribers` can subscribe to them in order to be notified by the `Protocol` of their choice.
+- `Protocol`: A communication standard to send notification back to the `Subscriber`. Protocols are pluggable in pushd so you can add your own custom protocol. By default, pushd is bundled with support for APNs (iOS), C2DM (Android) and MPNS (Windows Phone). More protocols will be added in the future.
 
 Getting Started
 ---------------
