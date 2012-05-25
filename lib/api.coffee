@@ -66,7 +66,7 @@ exports.setupRestApi = (app, createSubscriber, authorize) ->
 
     # Unsubscribe a subscriber from an event
     app.delete '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->
-        res.subscriber.removeSubscription req.event, (deleted) ->
+        req.subscriber.removeSubscription req.event, (deleted) ->
             res.send if deleted then 204 else 404
 
     # Event stats
