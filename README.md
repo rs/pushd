@@ -112,7 +112,7 @@ Register a subscriber by POSTing on `/subscribers` with some subscriber informat
     > POST /subscribers HTTP/1.1
     > Content-Type: application/x-www-form-urlencoded
     > 
-    > proto=apns
+    > proto=apns&
     > token=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660&
     > lang=fr&
     > badge=0
