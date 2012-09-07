@@ -22,7 +22,7 @@ pushservices = new PushServices()
 for name, conf of settings when conf.enabled
     pushservices.addService(name, new conf.class(conf, logger, tokenResolver))
 
-app = express.createServer()
+app = express()
 
 app.configure ->
     app.use(express.logger(':method :url :status')) if settings.server?.access_log
