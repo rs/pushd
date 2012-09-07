@@ -18,15 +18,20 @@ exports.apns =
     # uncommant for dev env
     #gateway: 'gateway.sandbox.push.apple.com'
 
-exports.c2dm =
+# exports.c2dm =
+#     enabled: yes
+#     class: require('./lib/pushservices/c2dm').PushServiceC2DM
+#     # App credentials
+#     user: 'app-owner@gmail.com'
+#     password: 'something complicated and secret'
+#     source: 'com.yourcompany.app-name'
+#     # How many concurrent requests to perform
+#     concurrency: 10
+
+exports.gcm =
     enabled: yes
-    class: require('./lib/pushservices/c2dm').PushServiceC2DM
-    # App credentials
-    user: 'app-owner@gmail.com'
-    password: 'something complicated and secret'
-    source: 'com.yourcompany.app-name'
-    # How many concurrent requests to perform
-    concurrency: 10
+    class: require('./lib/pushservices/gcm').PushServiceGCM
+    key: 'GCM API KEY HERE'
 
 exports.mpns =
     enabled: no
