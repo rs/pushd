@@ -10,7 +10,11 @@
         "type": "git",
         "url": "git://github.com/rs/pushd.git"
     },
-    "bin": "./pushd.coffee",
+    "preferGlobal": "true",
+    "bin":
+    {
+        "pushd-server": "./server.js"
+    },
     "directories":
     {
         "lib": "./lib"
