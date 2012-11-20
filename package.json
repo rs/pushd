@@ -41,5 +41,10 @@
     {
         "mocha": "*",
         "should": "*"
-    }
+    },
+    "licenses":
+    [{
+      "type": "MIT",
+      "url": "https://github.com/rs/pushd/raw/master/LICENSE"
+    }]
 }
