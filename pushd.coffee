@@ -38,9 +38,12 @@ app.param 'subscriber_id', (req, res, next, id) ->
     catch error
         res.json error: error.message, 400
 
+getEventFromId = (id) ->
+    return new Event(redis, pushservices, id)
+
 app.param 'event_id', (req, res, next, id) ->
     try
-        req.event = new Event(redis, pushservices, req.params.event_id)
+        req.event = getEventFromId(req.params.event_id)
         delete req.params.event_id
         next()
     catch error
@@ -61,7 +64,7 @@ authorize = (realm) ->
     else
         return (req, res, next) -> next()
 
-require('./lib/api').setupRestApi(app, createSubscriber, authorize)
+require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize)
 
 app.listen settings?.server?.tcp_port ? 80
 

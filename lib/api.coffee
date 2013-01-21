@@ -1,9 +1,12 @@
+async = require 'async'
+util = require 'util'
+
 filterFields = (params) ->
     fields = {}
     fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version']
     return fields
 
-exports.setupRestApi = (app, createSubscriber, authorize) ->
+exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize) ->
     authorize ?= (realm) ->
 
     # subscriber registration
@@ -44,6 +47,49 @@ exports.setupRestApi = (app, createSubscriber, authorize) ->
                 res.json subsAndOptions
             else
                 res.send 404
+
+    # Set subscriber subscriptions
+    app.post '/subscriber/:subscriber_id/subscriptions', authorize('register'), (req, res) ->
+        subsToAdd = req.body
+        for eventId, optionsDict of req.body
+            try
+                event = getEventFromId(eventId)
+                options = 0
+                if optionsDict? and typeof(optionsDict) is 'object' and optionsDict.ignore_message
+                    options |= event.OPTION_IGNORE_MESSAGE
+                subsToAdd[event.name] = event: event, options: options
+            catch error
+                res.json error: error.message, 400
+                return
+
+        req.subscriber.getSubscriptions (subs) ->
+            tasks = []
+
+            for sub in subs
+                if sub.event.name of subsToAdd
+                    subToAdd = subsToAdd[sub.event.name]
+                    if subToAdd.options != sub.options
+                        tasks.push ['set', subToAdd.event, subToAdd.options]
+                    delete subsToAdd[sub.event.name]
+                else
+                    tasks.push ['del', sub.event, 0]
+
+            for eventName, sub of subsToAdd
+                tasks.push ['add', sub.event, sub.options]
+
+            async.every tasks, (task, callback) ->
+                [action, event, options] = task
+                if action == 'add'
+                    req.subscriber.addSubscription event, options, (added) ->
+                        callback(added)
+                else if action == 'del'
+                    req.subscriber.removeSubscription event, (deleted) ->
+                        callback(deleted)
+                else if action == 'set'
+                    req.subscriber.addSubscription event, options, (added) ->
+                        callback(!added) # should return false
+            , (result) ->
+                res.send if result then 200 else 400
 
     # Get subscriber subscription options
     app.get '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->

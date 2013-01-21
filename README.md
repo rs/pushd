@@ -111,17 +111,17 @@ Register a subscriber by POSTing on `/subscribers` with some subscriber informat
 
     > POST /subscribers HTTP/1.1
     > Content-Type: application/x-www-form-urlencoded
-    > 
+    >
     > proto=apns&
     > token=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660&
     > lang=fr&
     > badge=0
-    > 
+    >
     ---
     < HTTP/1.1 201 Created
     < Location: /subscriber/JYJ1ehuEHbU
     < Content-Type: application/json
-    < 
+    <
     < {
     <   "created":1332638892,
     <   "updated":1332638892,
@@ -139,7 +139,7 @@ Register a subscriber by POSTing on `/subscribers` with some subscriber informat
 	- `apns`: iOS (Apple Push Notification service)
 	- `c2dm`: Android (Cloud to subscriber Messaging)
 	- `mpns` Window Phone (Microsoft Push Notification Service)
-- `token`: The device registration id delivered by the platform's push notification service 
+- `token`: The device registration id delivered by the platform's push notification service
 
 ##### Allowed parameters:
 
@@ -262,7 +262,7 @@ To unsubscribe from an event, perform a DELETE on the subscription URL.
 
 #### List subscribers’ Subscriptions
 
-To get the list of events a subscriber is subscribed to, perform a GET on the `/subscriber/SUBSCRIBER_ID/subscriptions`.
+To get the list of events a subscriber is subscribed to, perform a GET on `/subscriber/SUBSCRIBER_ID/subscriptions`.
 
     > GET /subscriber/SUBSCRIBER_ID/subscriptions HTTP/1.1
     >
@@ -284,6 +284,20 @@ To test for the presence of a single subscription, perform a GET on the subscrip
     < Content-Type: application/json
     <
     < {"ignore_message":false}
+
+#### Bulk edit subcribers's Subscriptions
+
+To set all subscriptions in one request, perform a POST with a JSON object on `/subscriber/SUBSCRIBER_ID/subscriptions` with event names as key and a dictionary of options as value or null.
+
+    > POST /subscriber/SUBSCRIBER_ID/subscriptions HTTP/1.1
+    > Content-Type: application/json
+    >
+    > {
+    >   "EVENT_NAME": {"ignore_message": false},
+    >   "EVENT_NAME2": ...
+    > }
+    ---
+    < HTTP/1.1 200 Ok
 
 ### Event Ingestion
 

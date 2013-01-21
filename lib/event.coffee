@@ -7,7 +7,7 @@ class Event
 
     constructor: (@redis, @pushservices, @name) ->
         throw new Error("Missing redis connection") if not redis?
-        throw new Error('Invalid event name') if not Event::name_format.test @name
+        throw new Error('Invalid event name ' + @name) if not Event::name_format.test @name
         @key = "event:#{@name}"
 
     info: (cb) ->

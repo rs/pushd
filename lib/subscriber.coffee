@@ -181,7 +181,7 @@ class Subscriber
                     for eventName, i in eventsWithOptions by 2
                         subscriptions.push
                             event: new Event(@redis, null, eventName)
-                            options: eventsWithOptions[i + 1]
+                            options: parseInt(eventsWithOptions[i + 1], 10)
                     cb(subscriptions)
                 else
                     cb(null) # null if subscriber doesn't exist
@@ -199,7 +199,7 @@ class Subscriber
                         event: event
                         options: parseInt(results[1], 10)
                 else
-                    cb(null) # null if subscriber doesn't exist        
+                    cb(null) # null if subscriber doesn't exist
 
     addSubscription: (event, options, cb) ->
         @redis.multi()
