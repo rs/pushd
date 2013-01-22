@@ -48,7 +48,7 @@ Getting Started
 
 At first launch, your app must register with the push notification service to get a registration id. It then provides this registration id to pushd in exchange for a subscriber id (This subscriber id will be used with all further communications with pushd). Some informations can be sent with the request to pushd like: subscriber language, version or current badge value.
 
-subscriber registration is performed through a HTTP REST API (see later for more details). Here is an example of a subscriber registration simulated using the curl command. As an example, we will register the iOS device with the registration id `FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660`. For iOS, we have to specify the `apns` protocol. We also set the subscriber language to `fr` for French and init the badge to `0`. We suppose the command is run on the same machine as pushd:
+Subscriber registration is performed through a HTTP REST API (see later for more details). Here is an example of a subscriber registration simulated using the curl command. As an example, we will register the iOS device with the registration id `FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660`. For iOS, we have to specify the `apns` protocol. We also set the subscriber language to `fr` for French and init the badge to `0`. We suppose the command is run on the same machine as pushd:
 
     $ curl -d proto=apns \
            -d token=FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660 \
@@ -69,6 +69,8 @@ In reply, we get the following JSON structure:
     }
 
 Your app must save the `id` field value, it will be used for all further communication with pushd.
+
+Note: If you perform a registration using an already registered token, the server will respond with the same subscriber id and will just update the transmitted informations. You may choose to always register the given token instead of calling the ping endpoint.
 
 ### Ping
 
