@@ -18,15 +18,15 @@ exports.apns =
     # uncommant for dev env
     #gateway: 'gateway.sandbox.push.apple.com'
 
-# exports.c2dm =
+# # Uncomment to use same host for prod and dev
+# exports.apnsdev =
 #     enabled: yes
-#     class: require('./lib/pushservices/c2dm').PushServiceC2DM
-#     # App credentials
-#     user: 'app-owner@gmail.com'
-#     password: 'something complicated and secret'
-#     source: 'com.yourcompany.app-name'
-#     # How many concurrent requests to perform
-#     concurrency: 10
+#     class: require('./lib/pushservices/apns').PushServiceAPNS
+#     # Your dev certificats
+#     cert: 'apns-cert.pem'
+#     key: 'apns-key.pem'
+#     cacheLength: 100
+#     gateway: 'gateway.sandbox.push.apple.com'
 
 exports.gcm =
     enabled: yes
@@ -37,3 +37,15 @@ exports.mpns =
     enabled: no
     class: require('./lib/pushservices/mpns').PushServiceMPNS
     endpoint: 'http://sn1.notify.live.net/throttledthirdparty/01.00/YOUR_ENDPOINT_HERE'
+
+# # Legacy Android Push Service
+# exports.c2dm =
+#     enabled: yes
+#     class: require('./lib/pushservices/c2dm').PushServiceC2DM
+#     # App credentials
+#     user: 'app-owner@gmail.com'
+#     password: 'something complicated and secret'
+#     source: 'com.yourcompany.app-name'
+#     # How many concurrent requests to perform
+#     concurrency: 10
+
