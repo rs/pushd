@@ -17,6 +17,7 @@ exports.apns =
     cacheLength: 100
     # uncommant for dev env
     #gateway: 'gateway.sandbox.push.apple.com'
+    #address: 'feedback.sandbox.push.apple.com'
 
 # # Uncomment to use same host for prod and dev
 # exports.apnsdev =
