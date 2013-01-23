@@ -6,7 +6,7 @@ filterFields = (params) ->
     fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version']
     return fields
 
-exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize) ->
+exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSubscriber) ->
     authorize ?= (realm) ->
 
     # subscriber registration
@@ -36,6 +36,10 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize) ->
     app.delete '/subscriber/:subscriber_id', authorize('register'), (req, res) ->
         req.subscriber.delete (deleted) ->
             res.send if deleted then 204 else 404
+
+    app.post '/subscriber/:subscriber_id/test', authorize('register'), (req, res) ->
+        testSubscriber(req.subscriber)
+        res.send 201
 
     # Get subscriber subscriptions
     app.get '/subscriber/:subscriber_id/subscriptions', authorize('register'), (req, res) ->

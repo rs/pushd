@@ -222,6 +222,20 @@ You may want to read informations stored about a subscriber id.
 - `400` Invalid subscriber id format
 - `404` The specified subscriber does not exist
 
+#### Self Subscriber Test
+
+You may want to test from your app if the push notification system is working. You can test this by POSTing an empty body on `/subscriber/SUBSCRIBER_ID/test`. Pushd will send back a test notification with "Test" as message and {"test": "ok"} as data.
+
+    > POST /subscriber/SUBSCRIBER_ID/test HTTP/1.1
+    >
+    --
+    < HTTP/1.1 201 Created
+
+##### Return Codes
+- `200` subscriber exists, information returned
+- `400` Invalid subscriber id format
+- `404` The specified subscriber does not exist
+
 #### Subscribe to an Event
 
 For pushd, an event is represented as a simple string. By default a subscriber won't receive push notifications other than broadcasts or direct messages if it’s not subscribed to events. Events are text and/or data sent by your service on pushd. Pushd's role is to convert this event into a push notification for any subscribed subscriber.

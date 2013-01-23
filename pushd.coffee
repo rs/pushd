@@ -8,6 +8,7 @@ settings = require './settings'
 Subscriber = require('./lib/subscriber').Subscriber
 Event = require('./lib/event').Event
 PushServices = require('./lib/pushservices').PushServices
+Payload = require('./lib/payload').Payload
 logger = console
 
 createSubscriber = (fields, cb) ->
@@ -41,6 +42,9 @@ app.param 'subscriber_id', (req, res, next, id) ->
 getEventFromId = (id) ->
     return new Event(redis, pushservices, id)
 
+testSubscriber = (subscriber) ->
+    pushservices.push(subscriber, null, new Payload({msg: "Test", "data.test": "ok"}))
+
 app.param 'event_id', (req, res, next, id) ->
     try
         req.event = getEventFromId(req.params.event_id)
@@ -64,7 +68,7 @@ authorize = (realm) ->
     else
         return (req, res, next) -> next()
 
-require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize)
+require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber)
 
 app.listen settings?.server?.tcp_port ? 80
 
