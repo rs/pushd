@@ -70,7 +70,8 @@ describe 'Event', ->
                     unhandledSubscribers[subscriber.id].should.be.true
                     delete unhandledSubscribers[subscriber.id]
                     done()
-                , =>
+                , (total) =>
+                    total.should.equal totalSubscribers
                     (i for i of unhandledSubscribers).length.should.equal 0
                     async.whilst =>
                         subscribers.length > 0
