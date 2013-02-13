@@ -1,4 +1,5 @@
 should = require 'should'
+async = require 'async'
 redis = require 'redis'
 Subscriber = require('../lib/subscriber').Subscriber
 Event = require('../lib/event').Event
@@ -14,10 +15,10 @@ class PushServiceFake
         PushServiceFake::total++
 
 createSubscriber = (redis, cb) ->
-    info =
-        proto: 'apns'
-        token: 'FE66489F304DC75B8D6E8200DFF8A456E8DAEACEC428B427E9518741C92C6660'
-    Subscriber::create(redis, info, cb)
+    chars = '0123456789ABCDEF'
+    token = ''
+    token += chars[Math.floor(Math.random() * chars.length)] for i in [1..64]
+    Subscriber::create(redis, {proto: 'apns', token: token}, cb)
 
 describe 'Event', ->
     @redis = null
@@ -48,6 +49,36 @@ describe 'Event', ->
                 @redis.keys '*', (err, keys) =>
                     keys.should.be.empty
                     done()
+
+    describe 'forEachSubscribers()', =>
+        it 'should iterate of multiple pages of subscribers', (doneAll) =>
+            totalSubscribers = 410
+            subscribers = []
+            async.whilst =>
+                subscribers.length < totalSubscribers
+            , (doneCreatingSubscriber) =>
+                createSubscriber @redis, (subscriber) =>
+                    subscribers.push subscriber
+                    subscriber.addSubscription @event, 0, (added) =>
+                        doneCreatingSubscriber()
+            , =>
+                subscribers.length.should.equal totalSubscribers
+                unhandledSubscribers = {}
+                for subscriber in subscribers
+                    unhandledSubscribers[subscriber.id] = true
+                @event.forEachSubscribers (subscriber, subOptions, done) =>
+                    unhandledSubscribers[subscriber.id].should.be.true
+                    delete unhandledSubscribers[subscriber.id]
+                    done()
+                , =>
+                    (i for i of unhandledSubscribers).length.should.equal 0
+                    async.whilst =>
+                        subscribers.length > 0
+                    , (doneCleaningSubscribers) =>
+                        subscribers.pop().delete =>
+                            doneCleaningSubscribers()
+                    , =>
+                        doneAll()
 
     describe 'publish()', =>
         it 'should not push anything if no subscribers', (done) =>

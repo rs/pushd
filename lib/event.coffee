@@ -109,13 +109,14 @@ class Event
         , (done) =>
             # treat subscribers by packs of 100 with async to prevent from blocking the event loop
             # for too long on large subscribers lists
-            @redis.zrange subscribersKey, (page++ * perPage), (page * perPage + perPage), 'WITHSCORES', (err, subscriberIdsAndOptions) =>
+            @redis.zrange subscribersKey, (page * perPage), (page * perPage + perPage - 1), 'WITHSCORES', (err, subscriberIdsAndOptions) =>
                 tasks = []
                 for id, i in subscriberIdsAndOptions by 2
                     tasks.push performAction(id, subscriberIdsAndOptions[i + 1])
                 async.series tasks, =>
                     total += subscriberIdsAndOptions.length / 2
                     done()
+            page++
         , =>
             # all done
             finished(total) if finished
