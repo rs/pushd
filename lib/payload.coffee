@@ -1,9 +1,12 @@
+serial = 0
+
 class Payload
     locale_format: /^[a-z]{2}_[A-Z]{2}$/
 
     constructor: (data) ->
         throw new Error('Invalid payload') unless typeof data is 'object'
 
+        @id = serial++
         @compiled = no
         @title = {}
         @msg = {}

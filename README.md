@@ -8,7 +8,7 @@ Universal Mobile Push Daemon
 Features
 --------
 
-- Multi protocols (APNs (iOS), C2DM (Android), MPNS (Windows Phone)
+- Multi protocols APNs (iOS), C2DM/GCM (Android), MPNS (Windows Phone)
 - Pluggable protocols
 - Register unlimited number of subscribers (device)
 - Subscribe to unlimited number of events
@@ -17,6 +17,7 @@ Features
 - Server side message translation
 - Message template
 - Broadcast
+- GCM multicast messaging
 - Events statistics
 - Automatic failing subscriber unregistration
 - Built-in Apple Feedback API handling
