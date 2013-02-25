@@ -51,7 +51,7 @@ describe 'Payload', ->
 
         it 'should throw an error with invalid variable name', =>
             payload = new Payload(title: 'hello ${name}', 'var.name': 'world')
-            (-> payload.compile()).should.throw 'Invalid variable ${name}'
+            (-> payload.compile()).should.throw 'Invalid variable type for ${name}'
 
         it 'should resolve (var) variable correctly', =>
             payload = new Payload

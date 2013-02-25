@@ -64,9 +64,9 @@ class Payload
     variable: (keyPath) ->
         [prefix, key] = keyPath.split('.', 2)
         if prefix not in ['var', 'data']
-            throw new Error("Invalid variable type ${#{variable}}")
+            throw new Error("Invalid variable type for ${#{keyPath}}")
         if not @[prefix][key]?
-            throw new Error("The ${#{variable}} does not exist")
+            throw new Error("The ${#{keyPath}} does not exist")
         return @[prefix][key]
 
 
