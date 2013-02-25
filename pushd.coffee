@@ -31,6 +31,7 @@ app.configure ->
     app.use(express.limit('1mb')) # limit posted data to 1MB
     app.use(express.bodyParser())
     app.use(app.router)
+    app.disable('x-powered-by');
 
 app.param 'subscriber_id', (req, res, next, id) ->
     try
