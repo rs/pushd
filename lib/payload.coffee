@@ -57,13 +57,18 @@ class Payload
         @compiled = yes
 
     compileTemplate: (tmpl) ->
-        return tmpl.replace /\$\{(.*?)\}/g, (match, variable) =>
-            [prefix, key] = variable.split('.', 2)
-            if prefix not in ['var', 'data']
-                throw new Error("Invalid variable ${#{variable}}")
-            if not @[prefix][key]?
-                throw new Error("The ${#{variable}} does not exist")
-            return @[prefix][key]
+        return tmpl.replace /\$\{(.*?)\}/g, (match, keyPath) =>
+            return @.variable(keyPath)
+
+    # Extracts variable from payload. The keyPath can be `var.somekey` or `data.somekey`
+    variable: (keyPath) ->
+        [prefix, key] = keyPath.split('.', 2)
+        if prefix not in ['var', 'data']
+            throw new Error("Invalid variable type ${#{variable}}")
+        if not @[prefix][key]?
+            throw new Error("The ${#{variable}} does not exist")
+        return @[prefix][key]
+
 
 
 exports.Payload = Payload

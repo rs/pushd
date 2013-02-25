@@ -6,7 +6,7 @@ exports.server =
         # restrict publish access to private networks
         publish: ['127.0.0.1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']
 
-exports.apns =
+exports['apns'] =
     enabled: yes
     class: require('./lib/pushservices/apns').PushServiceAPNS
     # Convert cert.cer and key.p12 using:
@@ -20,7 +20,7 @@ exports.apns =
     #address: 'feedback.sandbox.push.apple.com'
 
 # # Uncomment to use same host for prod and dev
-# exports.apnsdev =
+# exports['apns-dev'] =
 #     enabled: yes
 #     class: require('./lib/pushservices/apns').PushServiceAPNS
 #     # Your dev certificats
@@ -29,18 +29,18 @@ exports.apns =
 #     cacheLength: 100
 #     gateway: 'gateway.sandbox.push.apple.com'
 
-exports.gcm =
+exports['gcm'] =
     enabled: yes
     class: require('./lib/pushservices/gcm').PushServiceGCM
     key: 'GCM API KEY HERE'
 
-exports.mpns =
+exports['mpns'] =
     enabled: no
     class: require('./lib/pushservices/mpns').PushServiceMPNS
     endpoint: 'http://sn1.notify.live.net/throttledthirdparty/01.00/YOUR_ENDPOINT_HERE'
 
 # # Legacy Android Push Service
-# exports.c2dm =
+# exports['c2dm'] =
 #     enabled: yes
 #     class: require('./lib/pushservices/c2dm').PushServiceC2DM
 #     # App credentials
@@ -50,3 +50,24 @@ exports.mpns =
 #     # How many concurrent requests to perform
 #     concurrency: 10
 
+exports['mpns-toast'] =
+    enabled: yes
+    class: require('./lib/pushservices/mpns').PushServiceMPNS
+    type: 'toast'
+
+exports['mpns-tile'] =
+    enabled: yes
+    class: require('./lib/pushservices/mpns').PushServiceMPNS
+    type: 'tile'
+    # Mapping defines where - in the payload - to get the value of each required properties
+    tileMapping:
+        title: "data.title"
+        backgroundImage: "data.background_image_url"
+        backBackgroundImage: "data.back_background_image_url"
+        backTitle: "data.back_title"
+        backContent: "data.message"
+        # param for WP8 flip tile (sent when subscriber declare a minimum OS version of 8.0)
+        smallBackgroundImage: "data.small_background_image_url"
+        wideBackgroundImage: "data.wide_background_image_url"
+        wideBackContent: "data.message"
+        wideBackBackgroundImage: "data.wide_back_background_image_url"
