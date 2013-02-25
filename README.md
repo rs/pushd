@@ -8,7 +8,7 @@ Universal Mobile Push Daemon
 Features
 --------
 
-- Multi protocols APNs (iOS), C2DM/GCM (Android), MPNS (Windows Phone)
+- Multi protocols [APNs] \(iOS), C2DM/[GCM] \(Android), [MPNS] \(Windows Phone), [HTTP] POST
 - Pluggable protocols
 - Register unlimited number of subscribers (device)
 - Subscribe to unlimited number of events
@@ -23,6 +23,11 @@ Features
 - Built-in Apple Feedback API handling
 - Redis backend
 - Fracking fast!
+
+[APNs]: https://github.com/rs/pushd/wiki/APNs
+[GCM]: https://github.com/rs/pushd/wiki/GCM
+[MPNS]: https://github.com/rs/pushd/wiki/MPNS
+[HTTP]: https://github.com/rs/pushd/wiki/HTTP
 
 Installation
 ------------

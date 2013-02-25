@@ -50,6 +50,10 @@ exports['mpns'] =
 #     # How many concurrent requests to perform
 #     concurrency: 10
 
+exports['http'] =
+    enabled: yes
+    class: require('./lib/pushservices/http').PushServiceHTTP
+
 exports['mpns-toast'] =
     enabled: yes
     class: require('./lib/pushservices/mpns').PushServiceMPNS
