@@ -21,6 +21,7 @@ tokenResolver = (proto, token, cb) ->
 
 pushservices = new PushServices()
 for name, conf of settings when conf.enabled
+    logger.log "Registering push service: #{name}"
     pushservices.addService(name, new conf.class(conf, logger, tokenResolver))
 
 app = express()
@@ -70,7 +71,9 @@ authorize = (realm) ->
 
 require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber)
 
-app.listen settings?.server?.tcp_port ? 80
+port = settings?.server?.tcp_port ? 80
+app.listen port
+logger.log "Listening on port #{port}"
 
 
 # UDP Event API
