@@ -37,7 +37,7 @@ class PushServiceMPNS
                         for property in properties
                             if map[property]
                                 try
-                                    note[property] = payload.variable(map[property])
+                                    note[property] = payload.compileTemplate(map[property])
                                 catch e
                                     # ignore this property
 

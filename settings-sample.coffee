@@ -61,13 +61,13 @@ exports['mpns-tile'] =
     type: 'tile'
     # Mapping defines where - in the payload - to get the value of each required properties
     tileMapping:
-        title: "data.title"
-        backgroundImage: "data.background_image_url"
-        backBackgroundImage: "data.back_background_image_url"
-        backTitle: "data.back_title"
-        backContent: "data.message"
+        title: "${data.title}"
+        backgroundImage: "${data.background_image_url}"
+        backBackgroundImage: "#005e8a"
+        backTitle: "${data.back_title}"
+        backContent: "${data.message}"
         # param for WP8 flip tile (sent when subscriber declare a minimum OS version of 8.0)
-        smallBackgroundImage: "data.small_background_image_url"
-        wideBackgroundImage: "data.wide_background_image_url"
-        wideBackContent: "data.message"
-        wideBackBackgroundImage: "data.wide_back_background_image_url"
+        smallBackgroundImage: "${data.small_background_image_url}"
+        wideBackgroundImage: "${data.wide_background_image_url}"
+        wideBackContent: "${data.message}"
+        wideBackBackgroundImage: "#005e8a"
