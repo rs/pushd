@@ -3,7 +3,7 @@ Universal Mobile Push Daemon
 
 *Pushd* is a pluggable unified push server for server-side notification to apps on mobile devices. With pushd you can send push notifications to any supported mobile platform from a single entry point. Pushd takes care of which device is subscribed to which event and is designed to support an unlimited amount of subscribable events.
 
-![Architecture Overview](https://github.com/rs/pushd/raw/master/doc/overview.png)
+![Architecture Overview](doc/overview.png)
 
 Features
 --------
