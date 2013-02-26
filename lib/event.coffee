@@ -1,11 +1,10 @@
 async = require 'async'
-Payload = require('./payload').Payload
 
 class Event
     OPTION_IGNORE_MESSAGE: 1
     name_format: /^[a-zA-Z0-9:._-]{1,100}$/
 
-    constructor: (@redis, @pushservices, @name) ->
+    constructor: (@redis, @name) ->
         throw new Error("Missing redis connection") if not redis?
         throw new Error('Invalid event name ' + @name) if not Event::name_format.test @name
         @key = "event:#{@name}"
@@ -28,47 +27,9 @@ class Event
                 else
                     cb(null)
 
-    publish: (data, cb) ->
-        try
-            payload = new Payload(data)
-            payload.event = @
-        catch e
-            # Invalid payload (empty, missing key or invalid key format)
-            cb(-1) if cb
-            return
-
+    exists: (cb) ->
         @redis.sismember "events", @name, (err, exists) =>
-            if not exists
-                cb(0) if cb
-                return
-
-            try
-                # Do not compile templates before to know there's some subscribers for the event
-                # and do not start serving subscribers if payload won't compile
-                payload.compile()
-            catch e
-                # Invalid payload (templates doesn't compile)
-                cb(-1) if cb
-                return
-
-            @forEachSubscribers (subscriber, subOptions, done) =>
-                # action
-                @pushservices.push(subscriber, subOptions, payload, done)
-            , (totalSubscribers) =>
-                # finished
-                if totalSubscribers > 0
-                    # update some event' stats
-                    @redis.multi()
-                        # account number of sent notification since event creation
-                        .hincrby(@key, "total", 1)
-                        # store last notification date for this event
-                        .hset(@key, "last", Math.round(new Date().getTime() / 1000))
-                        .exec =>
-                            cb(totalSubscribers) if cb
-                else
-                    # if there is no subscriber, cleanup the event
-                    @delete =>
-                        cb(0) if cb
+            cb(exists)
 
     delete: (cb) ->
         @forEachSubscribers (subscriber, subOptions, done) =>
@@ -83,6 +44,15 @@ class Event
                 .srem("events", @name)
                 .exec ->
                     cb() if cb
+
+    log: (cb) ->
+        @redis.multi()
+            # account number of sent notification since event creation
+            .hincrby(@key, "total", 1)
+            # store last notification date for this event
+            .hset(@key, "last", Math.round(new Date().getTime() / 1000))
+            .exec =>
+                cb() if cb
 
     # Performs an action on each subscriber subsribed to this event
     forEachSubscribers: (action, finished) ->

@@ -8,7 +8,7 @@ Universal Mobile Push Daemon
 Features
 --------
 
-- Multi protocols [APNs] \(iOS), C2DM/[GCM] \(Android), [MPNS] \(Windows Phone), [HTTP] POST
+- Multi protocols [APNs] \(iOS), C2DM/[GCM] \(Android), [MPNS] \(Windows Phone), [HTTP] POST, [EventSource](#event-source)
 - Pluggable protocols
 - Register unlimited number of subscribers (device)
 - Subscribe to unlimited number of events
@@ -107,6 +107,35 @@ You don't need to create events before sending them. If nobody is subscribed to 
 Here we will send a message to all subscribers subscribed to the `sport` event:
 
     $ curl -d msg=Test%20message http://localhost/event/sport
+
+Event Source
+------------
+
+Pushd supports the [Event Source](http://www.w3.org/TR/eventsource/) protocol, also known as Server Sent Events. This allows your web application to benefits from the same pushed event than native apps.
+
+This protocol is very different from other pushd supported protocol because it doesn't involve subsriber registration nor stored subscription. The web service connects to the pushd server and declars which event it is interested for, and pushd will push subscribed events in this same connections until the client stays connected.
+
+You may want to use [Yaffle EventSource polyfill](https://github.com/Yaffle/EventSource) on the client side in order to support CORS requests with older browsers.
+
+When Event Source is enabled, a new `/subscribe` API endpoint is available. You'll have to POST an `events` parameter with a list of events separated by commas:
+
+    > POST /subscribe HTTP/1.1
+    > Content-Type: application/x-www-form-urlencoded
+    > Accept: text/event-stream
+    >
+    > events=event1,event2,event3
+    >
+    ---
+    < HTTP/1.1 200 OK
+    < Content-Type: text/event-stream
+    < Cache-Control: no-cache
+    < Access-Control-Allow-Origin: *
+    < Connection: close
+    <
+    ... some time passes ...
+    < data: {"name": "event1", "title": {"default": "Title", "fr": "Titre"}, "message": {...}, "data": {"var1": "val1", "var2": "val2"}}
+    ... some time passes ...
+    < data: {"name": "event2", "title": {"default": "Title", "fr": "Titre"}, "message": {...}, "data": {"var1": "val1", "var2": "val2"}}
 
 API
 ---

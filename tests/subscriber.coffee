@@ -117,8 +117,8 @@ describe 'Subscriber', ->
 
     xdescribe 'getSubscriptions()', =>
         before =>
-            @testEvent = new Event(@redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
-            @testEvent2 = new Event(@redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
+            @testEvent = new Event(@redis, 'unit-test' +  Math.round(Math.random() * 100000))
+            @testEvent2 = new Event(@redis, 'unit-test' +  Math.round(Math.random() * 100000))
 
         it 'should return null on unexisting subscriber', (done) =>
             subscriber = new Subscriber(@redis, 'invalidid')
@@ -152,7 +152,7 @@ describe 'Subscriber', ->
 
     xdescribe 'addSubscription()', =>
         before =>
-            @testEvent = new Event(@redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
+            @testEvent = new Event(@redis, 'unit-test' +  Math.round(Math.random() * 100000))
 
         it 'should not add subscription on unexisting subscriber', (done) =>
             subscriber = new Subscriber(@subscriber.redis, 'invalidid')
@@ -170,7 +170,7 @@ describe 'Subscriber', ->
 
     xdescribe 'removeSubscription', =>
         before =>
-            @testEvent = new Event(@redis, null, 'unit-test' +  Math.round(Math.random() * 100000))
+            @testEvent = new Event(@redis, 'unit-test' +  Math.round(Math.random() * 100000))
 
         after (done) =>
             @testEvent.delete(done)
@@ -184,7 +184,7 @@ describe 'Subscriber', ->
             @subscriber.removeSubscription @testEvent, (removed) =>
                 removed.should.be.false
                 done()
-        it 'should remove an subscribed event correctly', (done) => 
+        it 'should remove an subscribed event correctly', (done) =>
             @subscriber.addSubscription @testEvent, 0, (added) =>
                 added.should.be.true
                 @subscriber.removeSubscription @testEvent, (removed) =>
