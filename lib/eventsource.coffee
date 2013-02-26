@@ -20,16 +20,16 @@ exports.setup = (app, authorize, eventPublisher) ->
             'Access-Control-Max-Age': '86400'
         res.end()
 
-    app.post '/subscribe', authorize('listen'), (req, res) ->
+    app.get '/subscribe', authorize('listen'), (req, res) ->
         unless req.accepts('text/event-stream')
             res.send 406
             return
 
-        unless typeof req.body.events is 'string'
+        unless typeof req.query.events is 'string'
             res.send 400
             return
 
-        eventNames = req.body.events.split ','
+        eventNames = req.query.events.split ' '
 
         req.socket.setTimeout(Infinity);
         req.socket.setNoDelay(true);

@@ -117,13 +117,10 @@ This protocol is very different from other pushd supported protocol because it d
 
 You may want to use [Yaffle EventSource polyfill](https://github.com/Yaffle/EventSource) on the client side in order to support CORS requests with older browsers.
 
-When Event Source is enabled, a new `/subscribe` API endpoint is available. You'll have to POST an `events` parameter with a list of events separated by commas:
+When Event Source is enabled, a new `/subscribe` API endpoint is available. Use the `events` query-string parameter with a list of events separated by spaces:
 
-    > POST /subscribe HTTP/1.1
-    > Content-Type: application/x-www-form-urlencoded
+    > GET /subscribe?events=event1+event2+event3 HTTP/1.1
     > Accept: text/event-stream
-    >
-    > events=event1,event2,event3
     >
     ---
     < HTTP/1.1 200 OK
@@ -136,6 +133,21 @@ When Event Source is enabled, a new `/subscribe` API endpoint is available. You'
     < data: {"name": "event1", "title": {"default": "Title", "fr": "Titre"}, "message": {...}, "data": {"var1": "val1", "var2": "val2"}}
     ... some time passes ...
     < data: {"name": "event2", "title": {"default": "Title", "fr": "Titre"}, "message": {...}, "data": {"var1": "val1", "var2": "val2"}}
+
+Or in Javascript:
+
+``` javascript
+<script src="https://raw.github.com/Yaffle/EventSource/master/eventsource.js"></script>
+<script>
+var es = new EventSource('http://localhost/subscribe?events=event1+event2+event3');
+es.addEventListener('message', function (e)
+{
+    var event = JSON.parse(e.data);
+    document.body.appendChild(document.createTextNode(event.title.default));
+    document.body.appendChild(document.createElement('br'));
+});
+</script>
+```
 
 API
 ---
