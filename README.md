@@ -96,7 +96,20 @@ For instance, if your app is news related, you may want to create one subscripta
 
 You may later unsubscribe by switching from the `POST` to the `DELETE` method.
 
+You may also prefer to set all subscriptions at once by using the bulk subscription endpoint:
+
+    $ curl -H 'Content-Type: application/json' -d '{"sport":{}, "music":{}}' http://localhost/subscriber/J8lHY4X1XkU/subscriptions
+
 We recommend to auto-subscribe your users to some global event like for instance a country event if your app is international. This will let you send targeted messages to all of a given country’s users.
+
+### Typical App Launch Tasks
+
+1. Obtain device token from the OS
+2. Post the token on `/subscriber/:token` with parameters like `lang`, `badge` and `version`
+3. Extract the `id` from the response (you don't need to store it, treat it like a session id)
+4. Resubscribe the device to all its previously subscribed events by posting on `/subscriber/:id/subscriptions`
+
+This workflow ensures device stay registered and subscriptions are always up-to-date.
 
 ### Event Ingestion
 
