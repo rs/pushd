@@ -38,6 +38,7 @@ exports.setup = (app, authorize, eventPublisher) ->
             'Cache-Control': 'no-cache',
             'Access-Control-Allow-Origin': '*',
             'Connection': 'close'
+        res.write('\n')
 
         if req.get('User-Agent')?.indexOf('MSIE') != -1
             # Work around MSIE bug preventing Progress handler from behing thrown before first 2048 bytes

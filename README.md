@@ -111,11 +111,11 @@ Here we will send a message to all subscribers subscribed to the `sport` event:
 Event Source
 ------------
 
-Pushd supports the [Event Source](http://www.w3.org/TR/eventsource/) protocol, also known as Server Sent Events. This allows your web application to benefits from the same pushed event than native apps.
+Pushd supports the [Event Source](http://www.w3.org/TR/eventsource/) protocol, also known as Server Sent Events. This allows your web application to benefits from the same pushed event than your native apps.
 
-This protocol is very different from other pushd supported protocol because it doesn't involve subsriber registration nor stored subscription. The web service connects to the pushd server and declars which event it is interested for, and pushd will push subscribed events in this same connections until the client stays connected.
+This protocol is very different from other pushd supported protocol because it doesn't involve subsriber registration nor stored subscriptions. The web service connects to the pushd server and declars which event it is interested in, and then pushd will push subscribed events in this same connections until the client stays connected.
 
-You may want to use [Yaffle EventSource polyfill](https://github.com/Yaffle/EventSource) on the client side in order to support CORS requests with older browsers.
+You may want to use [Yaffle EventSource polyfill](https://github.com/Yaffle/EventSource) on the client side in order to support CORS requests with older browsers (see code example bellow).
 
 When Event Source is enabled, a new `/subscribe` API endpoint is available. Use the `events` query-string parameter with a list of events separated by spaces:
 
@@ -130,24 +130,26 @@ When Event Source is enabled, a new `/subscribe` API endpoint is available. Use 
     < Connection: close
     <
     ... some time passes ...
-    < data: {"name": "event1", "title": {"default": "Title", "fr": "Titre"}, "message": {...}, "data": {"var1": "val1", "var2": "val2"}}
+    < data: {"event": "event1", "title": {"default": "Title", "fr": "Titre"}, "message": {...}, "data": {"var1": "val1", "var2": "val2"}}
     ... some time passes ...
-    < data: {"name": "event2", "title": {"default": "Title", "fr": "Titre"}, "message": {...}, "data": {"var1": "val1", "var2": "val2"}}
+    < data: {"event": "event2", "title": {"default": "Title", "fr": "Titre"}, "message": {...}, "data": {"var1": "val1", "var2": "val2"}}
 
 Or in Javascript:
 
-``` javascript
+``` html
 <script src="https://raw.github.com/Yaffle/EventSource/master/eventsource.js"></script>
 <script>
 var es = new EventSource('http://localhost/subscribe?events=event1+event2+event3');
 es.addEventListener('message', function (e)
 {
     var event = JSON.parse(e.data);
-    document.body.appendChild(document.createTextNode(event.title.default));
+    document.body.appendChild(document.createTextNode(event.message.default));
     document.body.appendChild(document.createElement('br'));
 });
 </script>
 ```
+
+See codepen example: http://codepen.io/rs/pen/xAjpy
 
 API
 ---
