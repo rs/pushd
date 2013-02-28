@@ -70,6 +70,7 @@ exports['mpns-tile'] =
     type: 'tile'
     # Mapping defines where - in the payload - to get the value of each required properties
     tileMapping:
+        id: "${event.name}"
         title: "${data.title}"
         backgroundImage: "${data.background_image_url}"
         backBackgroundImage: "#005e8a"

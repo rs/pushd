@@ -28,7 +28,7 @@ class PushServiceMPNS
 
                     when "tile" # live tile under WP 7.5 or flip tile under WP 8.0+
                         map = @conf.tileMapping
-                        properties = ["title", "backgroundImage", "backBackgroundImage", "backTitle", "backContent"]
+                        properties = ["id", "title", "backgroundImage", "backBackgroundImage", "backTitle", "backContent"]
                         if subscriber.version >= 8.0
                             note = new mpns.flipTile()
                             properties.push(["smallBackgroundImage", "wideBackgroundImage", "wideBackContent", "wideBackBackgroundImage"]...)
