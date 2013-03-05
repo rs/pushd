@@ -107,7 +107,7 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
     app.post '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->
         options = 0
         if req.body.ignore_message
-            options |= event.OPTION_IGNORE_MESSAGE
+            options |= req.event.OPTION_IGNORE_MESSAGE
         req.subscriber.addSubscription req.event, options, (added) ->
             if added? # added is null if subscriber doesn't exist
                 res.send if added then 201 else 204
