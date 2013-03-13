@@ -21,6 +21,9 @@ exports['apns'] =
     cert: 'apns-cert.pem'
     key: 'apns-key.pem'
     cacheLength: 100
+    # Selects data keys which are allowed to be sent with the notification
+    # Keep in mind that APNS limits notification payload size to 256 bytes
+    payloadFilter: ['messageFrom']
     # uncommant for dev env
     #gateway: 'gateway.sandbox.push.apple.com'
     #address: 'feedback.sandbox.push.apple.com'

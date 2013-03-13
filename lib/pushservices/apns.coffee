@@ -11,6 +11,8 @@ class PushServiceAPNS
             @logger?.error("APNS Error #{errCode} for subscriber #{note?.device?.subscriberId}")
         @driver = new apns.Connection(conf)
 
+        @payloadFilter = conf.payloadFilter
+
         # Handle Apple Feedbacks
         conf.feedback = (time, apnsSubscriber) ->
             tokenResolver 'apns', apnsSubscriber.hexToken(), (subscriber) =>
@@ -30,7 +32,11 @@ class PushServiceAPNS
                 note.alert = alert
             note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
             note.sound = payload.sound
-            note.payload = payload.data
+            if @payloadFilter?
+                for key, val of payload.data
+                    note.payload[key] = val if key in @payloadFilter
+            else
+                note.payload = payload.data
             @driver.sendNotification note
             # On iOS we have to maintain the badge counter on the server
             subscriber.incr 'badge'
