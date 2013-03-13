@@ -50,7 +50,7 @@ class PushServiceGCM
                 @handleResult multicastResult, message.subscribers[0]
 
     handleResult: (result, subscriber) ->
-        if result.messageId
+        if result.messageId or result.message_id
             # if result.canonicalRegistrationId
                 # TODO: update subscriber token
         else
