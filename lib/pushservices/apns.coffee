@@ -6,7 +6,10 @@ class PushServiceAPNS
         if PushServiceAPNS::tokenFormat.test(token)
             return token.toLowerCase()
 
+    autoIncrementBadge: yes
+
     constructor: (conf, @logger, tokenResolver) ->
+        @autoIncrementBadge = conf.autoIncrementBadge if !!conf.autoIncrementBadge
         conf.errorCallback = (errCode, note) =>
             @logger?.error("APNS Error #{errCode} for subscriber #{note?.device?.subscriberId}")
         @driver = new apns.Connection(conf)
@@ -30,7 +33,8 @@ class PushServiceAPNS
             note.device.subscriberId = subscriber.id # used for error logging
             if subOptions?.ignore_message isnt true and alert = payload.localizedMessage(info.lang)
                 note.alert = alert
-            note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
+            increment = if @autoIncrementBadge then 1 else 0
+            note.badge = badge if not isNaN(badge = parseInt(info.badge) + increment)
             note.sound = payload.sound
             if @payloadFilter?
                 for key, val of payload.data
@@ -39,6 +43,6 @@ class PushServiceAPNS
                 note.payload = payload.data
             @driver.sendNotification note
             # On iOS we have to maintain the badge counter on the server
-            subscriber.incr 'badge'
+            subscriber.incr 'badge' if @autoIncrementBadge
 
 exports.PushServiceAPNS = PushServiceAPNS
