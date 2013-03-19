@@ -178,10 +178,11 @@ class Subscriber
                 if results[0]? # subscriber exists?
                     subscriptions = []
                     eventsWithOptions = results[1]
-                    for eventName, i in eventsWithOptions by 2
-                        subscriptions.push
-                            event: new Event(@redis, eventName)
-                            options: parseInt(eventsWithOptions[i + 1], 10)
+                    if eventsWithOptions?
+                        for eventName, i in eventsWithOptions by 2
+                            subscriptions.push
+                                event: new Event(@redis, eventName)
+                                options: parseInt(eventsWithOptions[i + 1], 10)
                     cb(subscriptions)
                 else
                     cb(null) # null if subscriber doesn't exist
