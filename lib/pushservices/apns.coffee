@@ -14,8 +14,8 @@ class PushServiceAPNS
         @payloadFilter = conf.payloadFilter
 
         # Handle Apple Feedbacks
-        conf.feedback = (time, apnsSubscriber) ->
-            tokenResolver 'apns', apnsSubscriber.hexToken(), (subscriber) =>
+        conf.feedback = (time, tokenBuffer) ->
+            tokenResolver 'apns', tokenBuffer.toString(), (subscriber) =>
                 subscriber?.get (info) ->
                     if info.updated < time
                         @logger.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
