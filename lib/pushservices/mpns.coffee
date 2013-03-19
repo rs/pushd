@@ -1,7 +1,7 @@
 mpns = require 'mpns'
 
 class PushServiceMPNS
-    tokenFormat: /^https?:\/\/\S{0,500}$/
+    tokenFormat: /^https?:\/\/[a-zA-Z0-9-.]+\.notify\.live\.net\/\S{0,500}$/
     validateToken: (token) ->
         if PushServiceMPNS::tokenFormat.test(token)
             return token
@@ -50,6 +50,7 @@ class PushServiceMPNS
 
             if note
                 note.send info.token, (error, result) =>
+                    console.log [error, result]
                     if error
                         if error.shouldDeleteChannel
                             @logger?.warn("MPNS Automatic unregistration for subscriber #{subscriber.id}")
