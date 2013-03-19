@@ -33,7 +33,7 @@
         "coffee-script": "~1.2.0",
         "apn": "1.2.5",
         "c2dm": "1.1.0",
-        "node-gcm": "0.9.2",
+        "node-gcm": "git://github.com/rs/node-gcm.git#8f9f04800c83728b450907757a97bce931e86ba1",
         "mpns": "git://github.com/rs/mpns.git#f96681ae12b98c82230125ef3fbc2909340c5d19",
         "async": "~0.2.5",
         "express": "~3.1.0",
