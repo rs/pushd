@@ -42,7 +42,9 @@ class PushServiceGCM
         clearTimeout message.timeoutId
 
         @driver.send message.note, message.tokens, 4, (multicastResult) =>
-            if 'results' of multicastResult
+            if not multicastResult?
+                @logger?.error("GCM Error: empty response")
+            else if 'results' of multicastResult
                 for result, i in multicastResult.results
                     @.handleResult result, message.subscribers[i]
             else
