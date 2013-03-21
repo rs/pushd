@@ -24,6 +24,9 @@ exports['apns'] =
     # Selects data keys which are allowed to be sent with the notification
     # Keep in mind that APNS limits notification payload size to 256 bytes
     payloadFilter: ['messageFrom']
+    # Enable/Disable badge auto increment. Usefull when badge feature is not
+    # needed but allowed in the app. Default value is yes if omitted.
+    autoIncrementBadge: yes
     # uncommant for dev env
     #gateway: 'gateway.sandbox.push.apple.com'
     #address: 'feedback.sandbox.push.apple.com'
@@ -58,6 +61,9 @@ exports['mpns'] =
 #     source: 'com.yourcompany.app-name'
 #     # How many concurrent requests to perform
 #     concurrency: 10
+#     # Ability to set a global collapse key. If it is set, collapse keys
+#     # won't be taken from the event name
+#     collapseKey: 'my_global_collapse_key'
 
 exports['http'] =
     enabled: yes

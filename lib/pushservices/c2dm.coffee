@@ -7,7 +7,10 @@ class PushServiceC2DM
         if PushServiceC2DM::tokenFormat.test(token)
             return token
 
+    collapseKey: null
+
     constructor: (conf, @logger, tokenResolver) ->
+        @collapseKey = conf.collapseKey if !!conf.collapseKey
         conf.concurrency ?= 10
         conf.keepAlive = true
         @driver = new c2dm.C2DM(conf)
@@ -29,7 +32,7 @@ class PushServiceC2DM
         task.subscriber.get (info) =>
             note =
                 registration_id: info.token
-                collapse_key: task.payload.event.name
+                collapse_key: if !!@collapseKey then @collapseKey else task.payload.event.name
             if task.subOptions?.ignore_message isnt true
                 if title = task.payload.localizedTitle(info.lang) 
                     note['data.title'] = title
