@@ -2,6 +2,7 @@ exports.server =
     redis_socket: '/var/run/redis/redis.sock'
     # redis_port: 6379
     # redis_host: 'localhost'
+    # redis_auth: 'password'
     tcp_port: 80
     udp_port: 80
     access_log: yes

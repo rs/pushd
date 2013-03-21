@@ -12,6 +12,9 @@ PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
 logger = console
 
+if settings.server?.redis_auth?
+    redis.auth(settings.server.redis_auth)
+
 createSubscriber = (fields, cb) ->
     throw new Error("Invalid value for `proto'") unless service = pushServices.getService(fields.proto)
     throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
