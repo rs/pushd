@@ -84,6 +84,36 @@ describe 'Event', ->
                     , =>
                         doneAll()
 
+        it 'should send a broadcast event to all subscribers', (doneAll) =>
+            broadcastEvent = new Event(@redis, 'broadcast')
+            totalSubscribers = 410
+            subscribers = []
+            async.whilst =>
+                subscribers.length < totalSubscribers
+            , (doneCreatingSubscriber) =>
+                createSubscriber @redis, (subscriber) =>
+                    subscribers.push subscriber
+                    doneCreatingSubscriber()
+            , =>
+                subscribers.length.should.equal totalSubscribers
+                unhandledSubscribers = {}
+                for subscriber in subscribers
+                    unhandledSubscribers[subscriber.id] = true
+                broadcastEvent.forEachSubscribers (subscriber, subOptions, done) =>
+                    unhandledSubscribers[subscriber.id].should.be.true
+                    delete unhandledSubscribers[subscriber.id]
+                    done()
+                , (total) =>
+                    total.should.equal totalSubscribers
+                    (i for i of unhandledSubscribers).length.should.equal 0
+                    async.whilst =>
+                        subscribers.length > 0
+                    , (doneCleaningSubscribers) =>
+                        subscribers.pop().delete =>
+                            doneCleaningSubscribers()
+                    , =>
+                        doneAll()
+
     describe 'publish()', =>
         it 'should not push anything if no subscribers', (done) =>
             PushServiceFake::total = 0

@@ -68,7 +68,7 @@ class Event
                 return (done) =>
                     action(new Subscriber(@redis, subscriberId), options, done)
 
-        subscribersKey = if @name is 'boardcast' then 'subscribers' else "#{@key}:subs"
+        subscribersKey = if @name is 'broadcast' then 'subscribers' else "#{@key}:subs"
         page = 0
         perPage = 100
         total = 0
