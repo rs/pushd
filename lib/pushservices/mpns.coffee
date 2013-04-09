@@ -19,7 +19,7 @@ class PushServiceMPNS
                         note = new mpns.toast()
                         note.text1 = payload.localizedTitle(info.lang)
                         note.text2 = payload.localizedMessage(info.lang)
-                        if @conf.paramTemplate and subscriber.version >= 7.5
+                        if @conf.paramTemplate and info.version >= 7.5
                             try
                                 note.param = payload.compileTemplate(@conf.paramTemplate)
                             catch e
@@ -29,7 +29,7 @@ class PushServiceMPNS
                     when "tile" # live tile under WP 7.5 or flip tile under WP 8.0+
                         map = @conf.tileMapping
                         properties = ["id", "title", "backgroundImage", "backBackgroundImage", "backTitle", "backContent"]
-                        if subscriber.version >= 8.0
+                        if info.version >= 8.0
                             note = new mpns.flipTile()
                             properties.push(["smallBackgroundImage", "wideBackgroundImage", "wideBackContent", "wideBackBackgroundImage"]...)
                         else
