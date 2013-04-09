@@ -2,7 +2,7 @@
     "author": "Olivier Poitrey <rs@dailymotion.com>",
     "name": "pushd",
     "description": "Blazing fast multi-protocol mobile push notification service",
-    "version": "1.5.6",
+    "version": "1.5.7",
     "homepage": "https://github.com/rs/pushd",
     "keywords": ["push", "notification", "apns", "c2dm", "mpns", "ios", "android", "windows", "phone"],
     "repository":
