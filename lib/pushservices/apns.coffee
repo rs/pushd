@@ -15,12 +15,13 @@ class PushServiceAPNS
 
         @feedback = new apns.Feedback(conf)
         # Handle Apple Feedbacks
-        @feedback.on 'feedback', (time, tokenBuffer) =>
-            tokenResolver 'apns', tokenBuffer.toString(), (subscriber) =>
-                subscriber?.get (info) ->
-                    if info.updated < time
-                        @logger?.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
-                        subscriber.delete()
+        @feedback.on 'feedback', (feedbackData) =>
+            feedbackData.forEach (item) =>
+                tokenResolver 'apns', item.device.toString(), (subscriber) =>
+                    subscriber?.get (info) ->
+                        if info.updated < item.time
+                            @logger?.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
+                            subscriber.delete()
 
 
     push: (subscriber, subOptions, payload) ->
