@@ -86,7 +86,7 @@ if eventSourceEnabled
 
 port = settings?.server?.tcp_port ? 80
 app.listen port
-logger.log "Listening on port #{port}"
+logger.log "Listening on tcp port #{port}"
 
 
 # UDP Event API
@@ -119,4 +119,7 @@ udpApi.on 'message', (msg, rinfo) ->
                     return
             logger.log("UDP/#{method} #{req.pathname} #{status}") if settings.server?.access_log
 
-udpApi.bind settings?.server?.udp_port ? 80
+port = settings?.server?.udp_port
+if port?
+    udpApi.bind port
+    logger.log "Listening on udp port #{port}"
