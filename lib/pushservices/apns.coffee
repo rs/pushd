@@ -7,27 +7,28 @@ class PushServiceAPNS
             return token.toLowerCase()
 
     constructor: (conf, @logger, tokenResolver) ->
-        conf.errorCallback = (errCode, note) =>
-            @logger?.error("APNS Error #{errCode} for subscriber #{note?.device?.subscriberId}")
+        conf.errorCallback = (errCode, note, device) =>
+            @logger?.error("APNS Error #{errCode} for subscriber #{device?.subscriberId}")
         @driver = new apns.Connection(conf)
 
         @payloadFilter = conf.payloadFilter
 
-        # Handle Apple Feedbacks
-        conf.feedback = (time, tokenBuffer) =>
-            tokenResolver 'apns', tokenBuffer.toString(), (subscriber) =>
-                subscriber?.get (info) ->
-                    if info.updated < time
-                        @logger?.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
-                        subscriber.delete()
         @feedback = new apns.Feedback(conf)
+        # Handle Apple Feedbacks
+        @feedback.on 'feedback', (feedbackData) =>
+            feedbackData.forEach (item) =>
+                tokenResolver 'apns', item.device.toString(), (subscriber) =>
+                    subscriber?.get (info) ->
+                        if info.updated < item.time
+                            @logger?.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
+                            subscriber.delete()
 
 
     push: (subscriber, subOptions, payload) ->
         subscriber.get (info) =>
             note = new apns.Notification()
-            note.device = new apns.Device(info.token)
-            note.device.subscriberId = subscriber.id # used for error logging
+            device = new apns.Device(info.token)
+            device.subscriberId = subscriber.id # used for error logging
             if subOptions?.ignore_message isnt true and alert = payload.localizedMessage(info.lang)
                 note.alert = alert
             note.badge = badge if not isNaN(badge = parseInt(info.badge) + 1)
@@ -37,7 +38,7 @@ class PushServiceAPNS
                     note.payload[key] = val if key in @payloadFilter
             else
                 note.payload = payload.data
-            @driver.sendNotification note
+            @driver.pushNotification note, device
             # On iOS we have to maintain the badge counter on the server
             subscriber.incr 'badge'
 
