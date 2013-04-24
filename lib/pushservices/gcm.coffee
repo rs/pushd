@@ -24,7 +24,7 @@ class PushServiceGCM
                 @multicastQueue[messageKey].subscribers.push(subscriber)
             else
                 note = new gcm.Message()
-                note.collapseKey = payload.event.name
+                note.collapseKey = payload.event?.name
                 if subOptions?.ignore_message isnt true
                     if title = payload.localizedTitle(info.lang)
                         note.addData 'title', title
