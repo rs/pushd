@@ -42,8 +42,8 @@ class Event
                 .del(@key)
                 # remove event from global event list
                 .srem("events", @name)
-                .exec ->
-                    cb() if cb
+                .exec (err, results) ->
+                    cb(results[1] > 0) if cb
 
     log: (cb) ->
         @redis.multi()
