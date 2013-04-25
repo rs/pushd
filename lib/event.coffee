@@ -28,8 +28,11 @@ class Event
                     cb(null)
 
     exists: (cb) ->
-        @redis.sismember "events", @name, (err, exists) =>
-            cb(exists)
+        if @name is 'broadcast'
+            cb(true)
+        else
+            @redis.sismember "events", @name, (err, exists) =>
+                cb(exists)
 
     delete: (cb) ->
         @forEachSubscribers (subscriber, subOptions, done) =>
