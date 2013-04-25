@@ -1,6 +1,7 @@
 crypto = require 'crypto'
 async = require 'async'
 Event = require('./event').Event
+logger = require 'winston'
 
 class Subscriber
     getInstanceFromToken: (redis, proto, token, cb) ->
@@ -107,7 +108,6 @@ class Subscriber
 
                 multi.exec (err, results) =>
                     @info = null # flush cache
-
                     # check if some events have been rendered empty
                     emptyEvents = []
                     for eventName, i in events when results[4 + i + (i * 1) + 1] is 0
@@ -216,6 +216,7 @@ class Subscriber
             .sadd("events", event.name)
             .exec (err, results) =>
                 if results[0]? # subscriber exists?
+                    logger.verbose "Registered subscriber #{@id} to event #{event.name}"
                     cb(results[1] is 1) if cb
                 else
                     # Tried to add a sub on an unexisting subscriber, remove just added sub
@@ -250,7 +251,10 @@ class Subscriber
                     event.delete() # TOFIX possible race condition
 
                 if results[0]? # subscriber exists?
-                    cb(results[1] is 1) if cb # true if removed, false if wasn't subscribed
+                    wasRemoved = results[1] is 1 # true if removed, false if wasn't subscribed
+                    if wasRemoved
+                        logger.verbose "Subscriber #{@id} unregistered from event #{event.name}"
+                    cb(wasRemoved) if cb
                 else
                     cb(null) if cb # null if subscriber doesn't exist
 
