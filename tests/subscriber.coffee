@@ -173,7 +173,8 @@ describe 'Subscriber', ->
             @testEvent = new Event(@redis, 'unit-test' +  Math.round(Math.random() * 100000))
 
         after (done) =>
-            @testEvent.delete(done)
+            @testEvent.delete ->
+              done()
 
         it 'should not remove subscription on an unexisting subscription', (done) =>
             subscriber = new Subscriber(@subscriber.redis, 'invalidid')
