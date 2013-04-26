@@ -28,8 +28,11 @@ class Event
                     cb(null)
 
     exists: (cb) ->
-        @redis.sismember "events", @name, (err, exists) =>
-            cb(exists)
+        if @name is 'broadcast'
+            cb(true)
+        else
+            @redis.sismember "events", @name, (err, exists) =>
+                cb(exists)
 
     delete: (cb) ->
         @forEachSubscribers (subscriber, subOptions, done) =>
@@ -42,8 +45,8 @@ class Event
                 .del(@key)
                 # remove event from global event list
                 .srem("events", @name)
-                .exec ->
-                    cb() if cb
+                .exec (err, results) ->
+                    cb(results[1] > 0) if cb
 
     log: (cb) ->
         @redis.multi()

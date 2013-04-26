@@ -29,7 +29,7 @@ class PushServiceC2DM
         task.subscriber.get (info) =>
             note =
                 registration_id: info.token
-                collapse_key: task.payload.event.name
+                collapse_key: task.payload.event?.name
             if task.subOptions?.ignore_message isnt true
                 if title = task.payload.localizedTitle(info.lang) 
                     note['data.title'] = title
