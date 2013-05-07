@@ -34,11 +34,24 @@ for name, conf of settings when conf.enabled
         pushServices.addService(name, new conf.class(conf, logger, tokenResolver))
 eventPublisher = new EventPublisher(pushServices)
 
+checkUserAndPassword = (username, password) =>
+    if settings.server?.auth?
+        if not settings.server.auth[username]?
+            logger.error "Unknown user #{username}"
+            return false
+        passwordOK = password is settings.server.auth[username].password
+        if not passwordOK
+            logger.error "Invalid password for #{username}"
+        return passwordOK
+    return false
+
 app = express()
 
 app.configure ->
     app.use(express.logger(':method :url :status')) if settings.server?.access_log
     app.use(express.limit('1mb')) # limit posted data to 1MB
+    if settings.server?.auth? and not settings.server?.acl?
+        app.use(express.basicAuth checkUserAndPassword)
     app.use(express.bodyParser())
     app.use(app.router)
     app.disable('x-powered-by');
@@ -77,6 +90,22 @@ authorize = (realm) ->
                         next()
                         return
             res.json error: 'Unauthorized', 403
+    else if settings.server?.auth?
+        return (req, res, next) ->
+            # req.user has been set by express.basicAuth
+            logger.verbose "Authenticating #{req.user} for #{realm}"
+            if not req.user?
+                logger.error "User not authenticated"
+                res.json error: 'Unauthorized', 403
+                return
+
+            allowedRealms = settings.server.auth[req.user]?.realms or []
+            if realm not in allowedRealms
+                logger.error "No access to #{realm} for #{req.user}, allowed: #{allowedRealms}"
+                res.json error: 'Unauthorized', 403
+                return
+
+            next()
     else
         return (req, res, next) -> next()
 
