@@ -1,5 +1,6 @@
 async = require 'async'
 util = require 'util'
+logger = require 'winston'
 
 filterFields = (params) ->
     fields = {}
@@ -11,6 +12,7 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
 
     # subscriber registration
     app.post '/subscribers', authorize('register'), (req, res) ->
+        logger.verbose "Registering subscriber: " + JSON.stringify req.body
         try
             fields = filterFields(req.body)
             createSubscriber fields, (subscriber, created) ->
@@ -19,22 +21,32 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
                     res.header 'Location', "/subscriber/#{subscriber.id}"
                     res.json info, if created then 201 else 200
         catch error
+            logger.error "Creating subscriber failed: #{error.message}"
             res.json error: error.message, 400
 
     # Get subscriber info
     app.get '/subscriber/:subscriber_id', authorize('register'), (req, res) ->
         req.subscriber.get (fields) ->
+            if not fields?
+                logger.error "No subscriber #{req.subscriber.id}"
+            else
+                logger.verbose "Subscriber #{req.subscriber.id} info: " + JSON.stringify(fields)
             res.json fields, if fields? then 200 else 404
 
     # Edit subscriber info
     app.post '/subscriber/:subscriber_id', authorize('register'), (req, res) ->
+        logger.verbose "Setting new properties for #{req.subscriber.id}: " + JSON.stringify(req.body)
         fields = filterFields(req.body)
         req.subscriber.set fields, (edited) ->
+            if not edited
+                logger.error "No subscriber #{req.subscriber.id}"
             res.send if edited then 204 else 404
 
     # Unregister subscriber
     app.delete '/subscriber/:subscriber_id', authorize('register'), (req, res) ->
         req.subscriber.delete (deleted) ->
+            if not deleted
+                logger.error "No subscriber #{req.subscriber.id}"
             res.send if deleted then 204 else 404
 
     app.post '/subscriber/:subscriber_id/test', authorize('register'), (req, res) ->
@@ -48,13 +60,16 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
                 subsAndOptions = {}
                 for sub in subs
                     subsAndOptions[sub.event.name] = {ignore_message: (sub.options & sub.event.OPTION_IGNORE_MESSAGE) isnt 0}
+                logger.verbose "Status of #{req.subscriber.id}: " + JSON.stringify(subsAndOptions)
                 res.json subsAndOptions
             else
+                logger.error "No subscriber #{req.subscriber.id}"
                 res.send 404
 
     # Set subscriber subscriptions
     app.post '/subscriber/:subscriber_id/subscriptions', authorize('register'), (req, res) ->
         subsToAdd = req.body
+        logger.verbose "Setting subscriptions for #{req.subscriber.id}: " + JSON.stringify(req.body)
         for eventId, optionsDict of req.body
             try
                 event = getEventFromId(eventId)
@@ -63,6 +78,7 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
                     options |= event.OPTION_IGNORE_MESSAGE
                 subsToAdd[event.name] = event: event, options: options
             catch error
+                logger.error "Failed to set subscriptions for #{req.subscriber.id}: #{error.message}"
                 res.json error: error.message, 400
                 return
 
@@ -93,6 +109,8 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
                     req.subscriber.addSubscription event, options, (added) ->
                         callback(!added) # should return false
             , (result) ->
+                if not result
+                    logger.error "Failed to set properties for #{req.subscriber.id}"
                 res.send if result then 200 else 400
 
     # Get subscriber subscription options
@@ -101,6 +119,7 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
             if options?
                 res.json {ignore_message: (options & req.event.OPTION_IGNORE_MESSAGE) isnt 0}
             else
+                logger.error "No subscriber #{req.subscriber.id}"
                 res.send 404
 
     # Subscribe a subscriber to an event
@@ -112,16 +131,25 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
             if added? # added is null if subscriber doesn't exist
                 res.send if added then 201 else 204
             else
+                logger.error "No subscriber #{req.subscriber.id}"
                 res.send 404
 
     # Unsubscribe a subscriber from an event
     app.delete '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->
         req.subscriber.removeSubscription req.event, (deleted) ->
+            if not deleted?
+                logger.error "No subscriber #{req.subscriber.id}"
+            else if not deleted
+                logger.error "Subscriber #{req.subscriber.id} was not subscribed to #{req.event.name}"
             res.send if deleted then 204 else 404
 
     # Event stats
     app.get '/event/:event_id', authorize('register'), (req, res) ->
         req.event.info (info) ->
+            if not info?
+                logger.error "No event #{req.event.name}"
+            else
+                logger.verbose "Event #{req.event.name} info: " + JSON.stringify info
             res.json info, if info? then 200 else 404
 
     # Publish an event
@@ -132,6 +160,8 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
     # Delete an event
     app.delete '/event/:event_id', authorize('publish'), (req, res) ->
         req.event.delete (deleted) ->
+            if not deleted
+                logger.error "No event #{req.event.name}"
             if deleted
                 res.send 204
             else
