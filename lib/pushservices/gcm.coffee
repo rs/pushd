@@ -41,7 +41,7 @@ class PushServiceGCM
         delete @multicastQueue[messageKey]
         clearTimeout message.timeoutId
 
-        @driver.send message.note, message.tokens, 4, (multicastResult) =>
+        @driver.send message.note, message.tokens, 4, (err, multicastResult) =>
             if not multicastResult?
                 @logger?.error("GCM Error: empty response")
             else if 'results' of multicastResult
