@@ -511,6 +511,17 @@ Possible levels:
 - `verbose`: log event and subscriber creation and deletion
 - `silly`: log submitted message content
 
+Testing
+-------
+
+### Unit tests
+
+`npm tests`
+
+### Performance testing
+
+See [tests/performance/README.md](tests/performance/README.md).
+
 License
 -------
 
