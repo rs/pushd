@@ -10,12 +10,17 @@ EventPublisher = require('./lib/eventpublisher').EventPublisher
 Event = require('./lib/event').Event
 PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
-logger = console
+logger = require 'winston'
+
+if settings.loglevel?
+    logger.remove(logger.transports.Console);
+    logger.add(logger.transports.Console, { level: settings.loglevel });
 
 if settings.server?.redis_auth?
     redis.auth(settings.server.redis_auth)
 
 createSubscriber = (fields, cb) ->
+    logger.verbose "creating subscriber proto = #{fields.proto}, token = #{fields.token}"
     throw new Error("Invalid value for `proto'") unless service = pushServices.getService(fields.proto)
     throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
     Subscriber::create(redis, fields, cb)
@@ -26,7 +31,7 @@ tokenResolver = (proto, token, cb) ->
 eventSourceEnabled = no
 pushServices = new PushServices()
 for name, conf of settings when conf.enabled
-    logger.log "Registering push service: #{name}"
+    logger.info "Registering push service: #{name}"
     if name is 'event-source'
         # special case for EventSource which isn't a pluggable push protocol
         eventSourceEnabled = yes
@@ -115,7 +120,7 @@ if eventSourceEnabled
 
 port = settings?.server?.tcp_port ? 80
 app.listen port
-logger.log "Listening on tcp port #{port}"
+logger.info "Listening on tcp port #{port}"
 
 
 # UDP Event API
@@ -133,7 +138,7 @@ udpApi.on 'message', (msg, rinfo) ->
         req = url.parse(msg ? '', true)
         method = method.toUpperCase()
         # emulate an express route middleware call
-        @checkaccess {socket: remoteAddress: rinfo.address}, {json: -> logger.log("UDP/#{method} #{req.pathname} 403")}, ->
+        @checkaccess {socket: remoteAddress: rinfo.address}, {json: -> logger.info("UDP/#{method} #{req.pathname} 403")}, ->
             status = 404
             if m = req.pathname?.match(event_route)
                 try
@@ -146,9 +151,9 @@ udpApi.on 'message', (msg, rinfo) ->
                 catch error
                     logger.error(error.stack)
                     return
-            logger.log("UDP/#{method} #{req.pathname} #{status}") if settings.server?.access_log
+            logger.info("UDP/#{method} #{req.pathname} #{status}") if settings.server?.access_log
 
 port = settings?.server?.udp_port
 if port?
     udpApi.bind port
-    logger.log "Listening on udp port #{port}"
+    logger.info "Listening on udp port #{port}"

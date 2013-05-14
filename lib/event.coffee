@@ -1,4 +1,5 @@
 async = require 'async'
+logger = require 'winston'
 
 class Event
     OPTION_IGNORE_MESSAGE: 1
@@ -35,11 +36,17 @@ class Event
                 cb(exists)
 
     delete: (cb) ->
+        logger.verbose "Deleting event #{@name}"
+
+        subscriberCount = 0
         @forEachSubscribers (subscriber, subOptions, done) =>
             # action
             subscriber.removeSubscription(@, done)
+            subscriberCount += 1
         , =>
             # finished
+            logger.verbose "Unsubscribed #{subscriberCount} subscribers from #{@name}"
+    
             @redis.multi()
                 # delete event's info hash
                 .del(@key)
