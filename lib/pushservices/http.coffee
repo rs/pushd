@@ -31,5 +31,6 @@ class PushServiceHTTP
                 #subscriber.delete()
 
             req.write(JSON.stringify(body))
+            req.end()
 
 exports.PushServiceHTTP = PushServiceHTTP
