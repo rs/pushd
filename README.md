@@ -496,6 +496,21 @@ The DELETE method is also available thrus UDP.
 - `404` The specified event does not exist
 
 
+Logging
+-------
+
+The verbosity of logging can be configured with the `loglevel` property in settings.coffee.
+
+    exports['loglevel'] = 'verbose'
+
+Possible levels:
+
+- `error`: log errors only
+- `warn`: log also warnings
+- `info`: log status messages
+- `verbose`: log event and subscriber creation and deletion
+- `silly`: log submitted message content
+
 License
 -------
 
