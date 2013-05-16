@@ -83,6 +83,11 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
                 return
 
         req.subscriber.getSubscriptions (subs) ->
+            if not subs?
+                logger.error "No subscriber #{req.subscriber.id}"
+                res.send 404
+                return
+
             tasks = []
 
             for sub in subs
