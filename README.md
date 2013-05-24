@@ -18,7 +18,7 @@ Features
 - Message template
 - Broadcast
 - GCM multicast messaging
-- Events statistics
+- Event, subscriber, and publishing statistics
 - Automatic failing subscriber unregistration
 - Built-in Apple Feedback API handling
 - Redis backend
@@ -495,6 +495,51 @@ The DELETE method is also available thrus UDP.
 - `204` Event deleted
 - `404` The specified event does not exist
 
+### Subscriber and publishing statistics
+
+Statistics on the number of subscribers and published messages are available by performing a GET on `/stats`
+
+    > GET /stats HTTP/1.1
+    >
+    ---
+    < HTTP/1.1 200 OK
+    < Content-Type: application/json
+    <
+    < {
+    <   "totalSubscribers": 3,
+    <   "subscribers": {
+    <     "gcm": 1,
+    <     "apns": 2
+    <   },
+    <   "totalPublished": 14,
+    <   "published": {
+    <     "apns": {
+    <       "2013-04": 1,
+    <       "2013-05": 4
+    <     },
+    <     "gcm": {
+    <       "2013-04": 2,
+    <       "2013-05": 7
+    <     }
+    <   },
+    <   "totalErrors": 3,
+    <   "errors": {
+    <     "gcm": {
+    <       "2013-05": 3
+    <     }
+    <   },
+    <   "totalEvents": 2
+    < }
+
+##### Explanation of parameters
+
+- `totalSubscribers`: The number of subscribers currently registered
+- `subscribers`: The number of registered subscribers broken down by the used protocol
+- `totalPublished`: The total number of messages pushed to subscribers. If a message is pushed to an event that has multiple subscribers, each subscriber is counted separately here.
+- `published`: The number of pushed messages broken down by the receiver's protocol and the month, when the message was published
+- `totalErrors`: The total number of failed push attempts
+- `errors`: The number of failed pushes broken down by the receiver's protocol and the month, when the push attempt was made
+- `totalEvents`: The number of currently registered events
 
 Logging
 -------

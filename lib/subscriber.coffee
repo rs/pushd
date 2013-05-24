@@ -258,5 +258,15 @@ class Subscriber
                 else
                     cb(null) if cb # null if subscriber doesn't exist
 
+    @subscriberCount: (redis, cb) ->
+        redis.hkeys 'tokenmap', (err, results) ->
+            counts = {}
+            for token in results
+                proto = token.split(':')[0]
+                counts[proto] = if counts[proto]? then counts[proto]+1 else 1
+            total = 0
+            for proto, val of counts
+                total += val
+            cb(total, counts) if cb
 
 exports.Subscriber = Subscriber

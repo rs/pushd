@@ -6,9 +6,10 @@ class PushServiceAPNS
         if PushServiceAPNS::tokenFormat.test(token)
             return token.toLowerCase()
 
-    constructor: (conf, @logger, tokenResolver) ->
+    constructor: (conf, @logger, tokenResolver, failCallback) ->
         conf.errorCallback = (errCode, note, device) =>
             @logger?.error("APNS Error #{errCode} for subscriber #{device?.subscriberId}")
+            failCallback 'apns'
         @driver = new apns.Connection(conf)
 
         @payloadFilter = conf.payloadFilter
@@ -22,6 +23,7 @@ class PushServiceAPNS
                     subscriber?.get (info) =>
                         if info.updated < item.time
                             @logger?.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
+                            failCallback 'apns'
                             subscriber.delete()
 
 

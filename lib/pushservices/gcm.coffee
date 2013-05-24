@@ -6,7 +6,7 @@ class PushServiceGCM
         if PushServiceGCM::tokenFormat.test(token)
             return token
 
-    constructor: (conf, @logger, tokenResolver) ->
+    constructor: (conf, @logger, tokenResolver, @failCallback) ->
         conf.concurrency ?= 10
         @driver = new gcm.Sender(conf.key)
         @multicastQueue = {}
@@ -43,6 +43,7 @@ class PushServiceGCM
 
         @driver.send message.note, message.tokens, 4, (err, multicastResult) =>
             if not multicastResult?
+                @failCallback 'gcm'
                 @logger?.error("GCM Error: empty response")
             else if 'results' of multicastResult
                 for result, i in multicastResult.results
@@ -57,6 +58,7 @@ class PushServiceGCM
                 # TODO: update subscriber token
         else
             error = result.error or result.errorCode
+            @failCallback 'gcm'
             if error is "NotRegistered" or error is "InvalidRegistration"
                 @logger?.warn("GCM Automatic unregistration for subscriber #{subscriber.id}")
                 subscriber.delete()

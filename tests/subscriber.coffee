@@ -1,4 +1,5 @@
 should = require 'should'
+async = require 'async'
 Subscriber = require('../lib/subscriber').Subscriber
 Event = require('../lib/event').Event
 redis = require 'redis'
@@ -10,6 +11,18 @@ createSubscriber = (redisClient, proto, token, cb) ->
     catch e
         redisClient.quit()
         throw e
+
+randomSubscriberToken = ->
+    chars = '0123456789ABCDEF'
+    token = ''
+    token += chars[Math.floor(Math.random() * chars.length)] for i in [1..64]
+    return token
+
+histogram = (arr) ->
+    counts = {}
+    for x in arr
+        counts[x] = if counts[x]? then counts[x]+1 else 1
+    return counts
 
 describe 'Subscriber', ->
     @redis = null
@@ -195,3 +208,35 @@ describe 'Subscriber', ->
             @subscriber.removeSubscription @testEvent, (removed) =>
                 removed.should.be.false
                 done()
+                
+    xdescribe 'subscriberCount()', =>
+        it 'should return the numbers of subscribers for each protocol', (doneAll) =>
+            subscriberProtos = ["apns", "apns", "apns", "gcm", "gcm"]
+            totalSubscribers = subscriberProtos.length
+            expectedCounts = histogram(subscriberProtos)
+
+            # one apns subscriber created at before()
+            totalSubscribers += 1
+            expectedCounts['apns'] += 1
+
+            subscribers = []
+            async.whilst =>
+                subscriberProtos.length > 0
+            , (doneCreatingSubscriber) =>
+                proto = subscriberProtos.pop()
+                createSubscriber @redis, proto, randomSubscriberToken(), (subscriber, created, tentatives) =>
+                    subscribers.push subscriber
+                    doneCreatingSubscriber()
+            , =>
+                Subscriber.subscriberCount @redis, (total, counts) =>
+                    total.should.equal totalSubscribers
+                    for proto, count of counts
+                        count.should.equal expectedCounts[proto]
+
+                    async.whilst =>
+                        subscribers.length > 0
+                    , (doneCleaningSubscribers) =>
+                        subscribers.pop().delete =>
+                            doneCleaningSubscribers()
+                    , =>
+                        doneAll()

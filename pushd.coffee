@@ -9,6 +9,7 @@ EventPublisher = require('./lib/eventpublisher').EventPublisher
 Event = require('./lib/event').Event
 PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
+Statistics = require('./lib/statistics').Statistics
 logger = require 'winston'
 
 if settings.server.redis_socket?
@@ -32,6 +33,10 @@ createSubscriber = (fields, cb) ->
 tokenResolver = (proto, token, cb) ->
     Subscriber::getInstanceFromToken redis, proto, token, cb
 
+statistics = new Statistics(redis)
+pushFailureLogger = (proto) ->
+    statistics.increasePushErrorCount(proto, 1, undefined)
+
 eventSourceEnabled = no
 pushServices = new PushServices()
 for name, conf of settings when conf.enabled
@@ -40,8 +45,8 @@ for name, conf of settings when conf.enabled
         # special case for EventSource which isn't a pluggable push protocol
         eventSourceEnabled = yes
     else
-        pushServices.addService(name, new conf.class(conf, logger, tokenResolver))
-eventPublisher = new EventPublisher(pushServices)
+        pushServices.addService(name, new conf.class(conf, logger, tokenResolver, pushFailureLogger))
+eventPublisher = new EventPublisher(redis, pushServices, statistics)
 
 checkUserAndPassword = (username, password) =>
     if settings.server?.auth?
@@ -118,7 +123,7 @@ authorize = (realm) ->
     else
         return (req, res, next) -> next()
 
-require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher)
+require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher, statistics)
 if eventSourceEnabled
     require('./lib/eventsource').setup(app, authorize, eventPublisher)
 

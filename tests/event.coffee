@@ -15,6 +15,15 @@ class PushServiceFake
     push: (subscriber, subOptions, info, payload) ->
         PushServiceFake::total++
 
+class StatisticsFake
+    total: 0
+
+    increasePublishedCount: (proto, count, cb) ->
+        StatisticsFake::total++
+
+    clearPublishedCounts: (cb) ->
+        StatisticsFake::total = 0
+
 createSubscriber = (redis, cb) ->
     chars = '0123456789ABCDEF'
     token = ''
@@ -35,23 +44,25 @@ describe 'Event', ->
             .exec =>
                 services = new PushServices()
                 services.addService('apns', new PushServiceFake())
-                @publisher = new EventPublisher(services)
+                @publisher = new EventPublisher(@redis, services, new StatisticsFake())
                 @event = new Event(@redis, 'unit-test' + Math.round(Math.random() * 100000))
                 done()
 
     afterEach (done) =>
         @event.delete =>
-            if @subscriber?
-                @subscriber.delete =>
+            #@publisher.clearPublishedCounts =>
+            if true
+                if @subscriber?
+                    @subscriber.delete =>
+                        @redis.keys '*', (err, keys) =>
+                            @redis.quit()
+                            keys.should.be.empty
+                            @subscriber = null
+                            done()
+                else
                     @redis.keys '*', (err, keys) =>
-                        @redis.quit()
                         keys.should.be.empty
-                        @subscriber = null
                         done()
-            else
-                @redis.keys '*', (err, keys) =>
-                    keys.should.be.empty
-                    done()
 
     describe 'forEachSubscribers()', =>
         it 'should iterate of multiple pages of subscribers', (doneAll) =>
@@ -155,3 +166,26 @@ describe 'Event', ->
                         @subscriber.getSubscriptions (subcriptions) =>
                             subcriptions.should.be.empty
                             done()
+                            
+    describe 'eventCount()', =>
+        it 'should return number of registered events', (doneAll) =>
+            totalEvents = 10
+            createSubscriber @redis, (subscriber) =>
+                events = []
+                async.whilst =>
+                    events.length < totalEvents
+                , (doneCreatingEvent) =>
+                    event = new Event(@redis, 'unit-test' + Math.round(Math.random() * 100000))
+                    events.push event
+                    
+                    # Event is not created in redis until somebody
+                    # subscribes to it
+                    subscriber.addSubscription event, 0, (added) =>
+                        doneCreatingEvent()
+                , =>
+                    events.length.should.equal totalEvents
+                    Event.eventCount @redis, (count) ->
+                        count.should.equal totalEvents
+
+                        subscriber.delete =>
+                            doneAll()

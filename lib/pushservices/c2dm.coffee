@@ -7,7 +7,7 @@ class PushServiceC2DM
         if PushServiceC2DM::tokenFormat.test(token)
             return token
 
-    constructor: (conf, @logger, tokenResolver) ->
+    constructor: (conf, @logger, tokenResolver, @failCallback) ->
         conf.concurrency ?= 10
         conf.keepAlive = true
         @driver = new c2dm.C2DM(conf)
@@ -38,11 +38,13 @@ class PushServiceC2DM
             note["data.#{key}"] = value for key, value of task.payload.data
             @driver.send note, (err, msgid) =>
                 done()
-                if err in ['InvalidRegistration', 'NotRegistered']
-                    # Handle C2DM API feedback about no longer or invalid registrations
-                    @logger?.warn("C2DM Automatic unregistration for subscriber #{task.subscriber.id}")
-                    task.subscriber.delete()
-                else if err
-                    @logger?.error("C2DM Error #{err} for subscriber #{task.subscriber.id}")
+                if err
+                    @failCallback 'c2dm'
+                    if err in ['InvalidRegistration', 'NotRegistered']
+                        # Handle C2DM API feedback about no longer or invalid registrations
+                        @logger?.warn("C2DM Automatic unregistration for subscriber #{task.subscriber.id}")
+                        task.subscriber.delete()
+                    else
+                        @logger?.error("C2DM Error #{err} for subscriber #{task.subscriber.id}")
 
 exports.PushServiceC2DM = PushServiceC2DM

@@ -101,4 +101,8 @@ class Event
             # all done
             finished(total) if finished
 
+    @eventCount: (redis, cb) ->
+        redis.scard 'events', (err, count) ->
+            cb(count) if cb
+
 exports.Event = Event
