@@ -13,10 +13,11 @@ class PushServiceMPNS
 
     push: (subscriber, subOptions, payload) ->
         subscriber.get (info) =>
+            note = {}
             if subOptions?.ignore_message isnt true
                 switch @conf.type
                     when "toast"
-                        note = new mpns.toast()
+                        sender = mpns.sendToast
                         note.text1 = payload.localizedTitle(info.lang)
                         note.text2 = payload.localizedMessage(info.lang)
                         if @conf.paramTemplate and info.version >= 7.5
@@ -30,10 +31,10 @@ class PushServiceMPNS
                         map = @conf.tileMapping
                         properties = ["id", "title", "count", "backgroundImage", "backBackgroundImage", "backTitle", "backContent"]
                         if info.version >= 8.0
-                            note = new mpns.flipTile()
+                            sender = mpns.sendFlipTile
                             properties.push(["smallBackgroundImage", "wideBackgroundImage", "wideBackContent", "wideBackBackgroundImage"]...)
                         else
-                            note = new mpns.liveTile()
+                            sender = mpns.sendTile
                         for property in properties
                             if map[property]
                                 try
@@ -45,19 +46,19 @@ class PushServiceMPNS
                         @logger?.error("Unsupported MPNS notification type: #{@conf.type}")
 
             else
-                note = new mpns.raw()
+                sender = mpns.sendRaw
                 note[key] = value for key, value of payload.data
 
-            if note
-                note.send info.token, (error, result) =>
-                    console.log [error, result]
+            if sender
+                sender info.token, note, (error, result) =>
                     if error
                         if error.shouldDeleteChannel
                             @logger?.warn("MPNS Automatic unregistration for subscriber #{subscriber.id}")
                             subscriber.delete()
                         else
                             @logger?.error("MPNS Error: (#{error.statusCode}) #{error.innerError}")
-
+                    else
+                        @logger?.verbose("MPNS result: #{JSON.stringify result}")
 
 exports.PushServiceMPNS = PushServiceMPNS
 
