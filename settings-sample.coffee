@@ -1,7 +1,7 @@
 exports.server =
-    redis_socket: '/var/run/redis/redis.sock'
-    # redis_port: 6379
-    # redis_host: 'localhost'
+    redis_port: 6379
+    redis_host: 'localhost'
+    # redis_socket: '/var/run/redis/redis.sock'
     # redis_auth: 'password'
     tcp_port: 80
     udp_port: 80
@@ -9,15 +9,15 @@ exports.server =
     acl:
         # restrict publish access to private networks
         publish: ['127.0.0.1', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16']
-    auth:
-        # require HTTP basic authentication, username is 'admin' and
-        # password is 'password'
-        #
-        # IP-based authentication overrides HTTP basic authentication
-        # if both acl and auth are defined.
-        admin:
-            password: 'password'
-            realms: ['register', 'publish']
+#    auth:
+#        # require HTTP basic authentication, username is 'admin' and
+#        # password is 'password'
+#        #
+#        # HTTP basic authentication overrides IP-based authentication
+#        # if both acl and auth are defined.
+#        admin:
+#            password: 'password'
+#            realms: ['register', 'publish']
 
 exports['event-source'] =
     enabled: yes
@@ -86,7 +86,9 @@ exports['mpns-tile'] =
     type: 'tile'
     # Mapping defines where - in the payload - to get the value of each required properties
     tileMapping:
-        id: "${event.name}"
+        # Used for WP7.5+ to push to secondary tiles
+        # id: "/SecondaryTile.xaml?DefaultTitle=${event.name}"
+        # count: "${data.count}"
         title: "${data.title}"
         backgroundImage: "${data.background_image_url}"
         backBackgroundImage: "#005e8a"
