@@ -84,18 +84,7 @@ app.param 'event_id', (req, res, next, id) ->
         res.json error: error.message, 400
 
 authorize = (realm) ->
-    if allow_from = settings.server?.acl?[realm]
-        networks = []
-        for network in allow_from
-            networks.push new Netmask(network)
-        return (req, res, next) ->
-            if remoteAddr = req.socket and (req.socket.remoteAddress or (req.socket.socket and req.socket.socket.remoteAddress))
-                for network in networks
-                    if network.contains(remoteAddr)
-                        next()
-                        return
-            res.json error: 'Unauthorized', 403
-    else if settings.server?.auth?
+    if settings.server?.auth?
         return (req, res, next) ->
             # req.user has been set by express.basicAuth
             logger.verbose "Authenticating #{req.user} for #{realm}"
@@ -111,6 +100,17 @@ authorize = (realm) ->
                 return
 
             next()
+    else if allow_from = settings.server?.acl?[realm]
+        networks = []
+        for network in allow_from
+            networks.push new Netmask(network)
+        return (req, res, next) ->
+            if remoteAddr = req.socket and (req.socket.remoteAddress or (req.socket.socket and req.socket.socket.remoteAddress))
+                for network in networks
+                    if network.contains(remoteAddr)
+                        next()
+                        return
+            res.json error: 'Unauthorized', 403
     else
         return (req, res, next) -> next()
 
