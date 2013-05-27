@@ -478,6 +478,21 @@ To get statistics from an event, perform a GET on `/event/EVENT_NAME`:
 - `200` Statistics returned
 - `404` The specified event does not exist
 
+#### List of registered events
+
+To get the names of currently registered events, perform a GET on `/events`:
+
+    > GET /events HTTP/1.1
+    >
+    ---
+    < HTTP/1.1 200 Ok
+    < Content-Type: application/json
+    <
+    < {"events": [
+    <   "EVENT_NAME1",
+    <   "EVENT_NAME2"
+    < ]}
+
 #### Event Purge
 
 When the application data provider know about a particular event will no longer be available, it can force pushd to forget about it and unsubscribe all current subscribers from it. To purge an event, perform a DELETE on `/event/EVENT_NAME`

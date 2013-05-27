@@ -9,6 +9,10 @@ class Event
         redis.scard 'events', (err, count) ->
             cb(count) if cb
 
+    listEvents: (redis, cb) ->
+        redis.smembers 'events', (err, values) ->
+            cb(values) if cb
+
     constructor: (@redis, @name) ->
         throw new Error("Missing redis connection") if not redis?
         throw new Error('Invalid event name ' + @name) if not Event::name_format.test @name

@@ -7,7 +7,7 @@ filterFields = (params) ->
     fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version']
     return fields
 
-exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSubscriber, collectStatistics, eventPublisher) ->
+exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSubscriber, collectStatistics, listEvents, eventPublisher) ->
     authorize ?= (realm) ->
 
     # subscriber registration
@@ -171,6 +171,12 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
                 res.send 204
             else
                 res.send 404
+
+    # List of registered events
+    app.get '/events', authorize('publish'), (req, res) ->
+        listEvents (events) ->
+            logger.verbose "Events: " + JSON.stringify events
+            res.json { events: events }, 200
 
     # Query subscriber and event statistics
     app.get '/stats', authorize('publish'), (req, res) ->

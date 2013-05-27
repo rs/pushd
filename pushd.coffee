@@ -138,7 +138,10 @@ testSubscriber = (subscriber) ->
 collectStatistics = (cb) ->
     statistics.collectStatistics cb
 
-require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, collectStatistics, eventPublisher)
+listEvents = (cb) ->
+    Event::listEvents(redis, cb)
+
+require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, collectStatistics, listEvents, eventPublisher)
 if eventSourceEnabled
     require('./lib/eventsource').setup(app, authorize, eventPublisher)
 
