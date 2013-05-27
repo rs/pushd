@@ -6,8 +6,8 @@ class Statistics
 
     collectStatistics: (cb) ->
         @getPublishedCounts (totalPublished, publishedOSMonthly, totalErrors, errorsOSMonthly) =>
-            Subscriber.subscriberCount @redis, (numsubscribers, subscribersPerProto) =>
-                Event.eventCount @redis, (numevents) =>
+            Subscriber::subscriberCount @redis, (numsubscribers, subscribersPerProto) =>
+                Event::eventCount @redis, (numevents) =>
                     stats =
                         totalSubscribers: numsubscribers
                         subscribers: subscribersPerProto
@@ -80,8 +80,8 @@ class Statistics
 
     publishedKeynamePostfix: (proto) ->
         today = new Date
-        year = today.getFullYear().toString()
-        month = (today.getMonth() + 1).toString()
+        year = today.getUTCFullYear().toString()
+        month = (today.getUTCMonth() + 1).toString()
         if month.length < 2
             month = '0' + month
         return "#{year}-#{month}:#{proto}"

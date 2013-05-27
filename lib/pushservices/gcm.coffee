@@ -43,7 +43,7 @@ class PushServiceGCM
 
         @driver.send message.note, message.tokens, 4, (err, multicastResult) =>
             if not multicastResult?
-                @failCallback 'gcm'
+                @failCallback()
                 @logger?.error("GCM Error: empty response")
             else if 'results' of multicastResult
                 for result, i in multicastResult.results
@@ -58,7 +58,7 @@ class PushServiceGCM
                 # TODO: update subscriber token
         else
             error = result.error or result.errorCode
-            @failCallback 'gcm'
+            @failCallback()
             if error is "NotRegistered" or error is "InvalidRegistration"
                 @logger?.warn("GCM Automatic unregistration for subscriber #{subscriber.id}")
                 subscriber.delete()

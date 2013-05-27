@@ -60,7 +60,7 @@ class PushServiceMPNS
                 try
                     sender info.token, note, (error, result) =>
                         if error
-                            @failCallback 'mpns'
+                            @failCallback()
                             if error.shouldDeleteChannel
                                 @logger?.warn("MPNS Automatic unregistration for subscriber #{subscriber.id}")
                                 subscriber.delete()
@@ -69,7 +69,7 @@ class PushServiceMPNS
                         else
                             @logger?.verbose("MPNS result: #{JSON.stringify result}")
                 catch error
-                    @failCallback 'mpns'
+                    @failCallback()
                     @logger?.error("MPNS Error: #{error}")
 
 exports.PushServiceMPNS = PushServiceMPNS

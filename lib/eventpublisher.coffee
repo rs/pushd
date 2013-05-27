@@ -3,7 +3,7 @@ Payload = require('./payload').Payload
 logger = require 'winston'
 
 class EventPublisher extends events.EventEmitter
-    constructor: (@redis, @pushServices, @statistics) ->
+    constructor: (@pushServices, @statistics) ->
 
     publish: (event, data, cb) ->
         try

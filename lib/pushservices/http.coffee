@@ -26,7 +26,7 @@ class PushServiceHTTP
             req = http.request(options)
 
             req.on 'error', (e) =>
-                @failCallback 'http'
+                @failCallback()
                 # TODO: allow some error before removing
                 #@logger?.warn("HTTP Automatic unregistration for subscriber #{subscriber.id}")
                 #subscriber.delete()

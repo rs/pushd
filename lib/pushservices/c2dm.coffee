@@ -39,7 +39,7 @@ class PushServiceC2DM
             @driver.send note, (err, msgid) =>
                 done()
                 if err
-                    @failCallback 'c2dm'
+                    @failCallback()
                     if err in ['InvalidRegistration', 'NotRegistered']
                         # Handle C2DM API feedback about no longer or invalid registrations
                         @logger?.warn("C2DM Automatic unregistration for subscriber #{task.subscriber.id}")

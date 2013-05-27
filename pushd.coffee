@@ -34,8 +34,10 @@ tokenResolver = (proto, token, cb) ->
     Subscriber::getInstanceFromToken redis, proto, token, cb
 
 statistics = new Statistics(redis)
-pushFailureLogger = (proto) ->
-    statistics.increasePushErrorCount(proto, 1, undefined)
+collectStatistics = (cb) ->
+    statistics.collectStatistics cb
+createPushFailureLogger = (proto) ->
+    -> statistics.increasePushErrorCount(proto, 1)
 
 eventSourceEnabled = no
 pushServices = new PushServices()
@@ -45,8 +47,8 @@ for name, conf of settings when conf.enabled
         # special case for EventSource which isn't a pluggable push protocol
         eventSourceEnabled = yes
     else
-        pushServices.addService(name, new conf.class(conf, logger, tokenResolver, pushFailureLogger))
-eventPublisher = new EventPublisher(redis, pushServices, statistics)
+        pushServices.addService(name, new conf.class(conf, logger, tokenResolver, cratePushFailureLogger name))
+eventPublisher = new EventPublisher(pushServices, statistics)
 
 checkUserAndPassword = (username, password) =>
     if settings.server?.auth?
@@ -123,7 +125,7 @@ authorize = (realm) ->
     else
         return (req, res, next) -> next()
 
-require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher, statistics)
+require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher, collectStatistics)
 if eventSourceEnabled
     require('./lib/eventsource').setup(app, authorize, eventPublisher)
 

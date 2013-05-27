@@ -228,7 +228,7 @@ describe 'Subscriber', ->
                     subscribers.push subscriber
                     doneCreatingSubscriber()
             , =>
-                Subscriber.subscriberCount @redis, (total, counts) =>
+                Subscriber::subscriberCount @redis, (total, counts) =>
                     total.should.equal totalSubscribers
                     for proto, count of counts
                         count.should.equal expectedCounts[proto]

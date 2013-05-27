@@ -44,7 +44,7 @@ describe 'Event', ->
             .exec =>
                 services = new PushServices()
                 services.addService('apns', new PushServiceFake())
-                @publisher = new EventPublisher(@redis, services, new StatisticsFake())
+                @publisher = new EventPublisher(services, new StatisticsFake())
                 @event = new Event(@redis, 'unit-test' + Math.round(Math.random() * 100000))
                 done()
 
@@ -184,7 +184,7 @@ describe 'Event', ->
                         doneCreatingEvent()
                 , =>
                     events.length.should.equal totalEvents
-                    Event.eventCount @redis, (count) ->
+                    Event::eventCount @redis, (count) ->
                         count.should.equal totalEvents
 
                         subscriber.delete =>
