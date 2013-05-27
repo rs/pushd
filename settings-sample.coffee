@@ -53,11 +53,6 @@ exports['gcm'] =
     class: require('./lib/pushservices/gcm').PushServiceGCM
     key: 'GCM API KEY HERE'
 
-exports['mpns'] =
-    enabled: no
-    class: require('./lib/pushservices/mpns').PushServiceMPNS
-    endpoint: 'http://sn1.notify.live.net/throttledthirdparty/01.00/YOUR_ENDPOINT_HERE'
-
 # # Legacy Android Push Service
 # exports['c2dm'] =
 #     enabled: yes
@@ -99,3 +94,8 @@ exports['mpns-tile'] =
         wideBackgroundImage: "${data.wide_background_image_url}"
         wideBackContent: "${data.message}"
         wideBackBackgroundImage: "#005e8a"
+
+exports['mpns-raw'] =
+    enabled: yes
+    class: require('./lib/pushservices/mpns').PushServiceMPNS
+    type: 'raw'
