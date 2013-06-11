@@ -18,7 +18,7 @@ class PushServiceMPNS
                 when "toast"
                     if subOptions?.ignore_message isnt true
                         sender = mpns.sendToast
-                        note.text1 = payload.localizedTitle(info.lang)
+                        note.text1 = payload.localizedTitle(info.lang) or '' # prevents exception
                         note.text2 = payload.localizedMessage(info.lang)
                         if @conf.paramTemplate and info.version >= 7.5
                             try
