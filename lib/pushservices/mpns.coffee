@@ -57,15 +57,18 @@ class PushServiceMPNS
                     @logger?.error("Unsupported MPNS notification type: #{@conf.type}")
 
             if sender
-                sender info.token, note, (error, result) =>
-                    if error
-                        if error.shouldDeleteChannel
-                            @logger?.warn("MPNS Automatic unregistration for subscriber #{subscriber.id}")
-                            subscriber.delete()
+                try
+                    sender info.token, note, (error, result) =>
+                        if error
+                            if error.shouldDeleteChannel
+                                @logger?.warn("MPNS Automatic unregistration for subscriber #{subscriber.id}")
+                                subscriber.delete()
+                            else
+                                @logger?.error("MPNS Error: (#{error.statusCode}) #{error.innerError}")
                         else
-                            @logger?.error("MPNS Error: (#{error.statusCode}) #{error.innerError}")
-                    else
-                        @logger?.verbose("MPNS result: #{JSON.stringify result}")
+                            @logger?.verbose("MPNS result: #{JSON.stringify result}")
+                catch error
+                    @logger?.error("MPNS Error: #{error}")
 
 exports.PushServiceMPNS = PushServiceMPNS
 
