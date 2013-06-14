@@ -117,7 +117,7 @@ describe 'Event', ->
     describe 'publish()', =>
         it 'should not push anything if no subscribers', (done) =>
             PushServiceFake::total = 0
-            @publisher.publish @event, {msg: 'test'}, (total) =>
+            @publisher.publish @event, {msg: 'test'}, null, (total) =>
                 PushServiceFake::total.should.equal 0
                 total.should.equal 0
                 done()
@@ -127,20 +127,20 @@ describe 'Event', ->
                 @subscriber.addSubscription @event, 0, (added) =>
                     added.should.be.true
                     PushServiceFake::total.should.equal 0
-                    @publisher.publish @event, {msg: 'test'}, (total) =>
+                    @publisher.publish @event, {msg: 'test'}, null, (total) =>
                         PushServiceFake::total.should.equal 1
                         total.should.equal 1
                         done()
 
     describe 'stats', =>
         it 'should increment increment total field on new subscription', (done) =>
-            @publisher.publish @event, {msg: 'test'}, =>
+            @publisher.publish @event, {msg: 'test'}, null, =>
                 @event.info (info) =>
                     should.not.exist(info)
                     createSubscriber @redis, (@subscriber) =>
                         @subscriber.addSubscription @event, 0, (added) =>
                             added.should.be.true
-                            @publisher.publish @event, {msg: 'test'}, =>
+                            @publisher.publish @event, {msg: 'test'}, null, =>
                                 @event.info (info) =>
                                     should.exist(info)
                                     info?.total.should.equal 1
