@@ -16,9 +16,14 @@ if settings.server.redis_socket?
 else if settings.server.redis_port? or settings.server.redis_host?
     redis = require('redis').createClient(settings.server.redis_port, settings.server.redis_host)
 
-if settings.loglevel?
-    logger.remove(logger.transports.Console);
-    logger.add(logger.transports.Console, { level: settings.loglevel });
+if settings.logging?
+    logger.remove(logger.transports.Console)
+    for loggerconfig in settings.logging
+        transport = logger.transports[loggerconfig['transport']]
+        if transport?
+            logger.add(transport, loggerconfig.options || {})
+        else
+            process.stderr.write "Invalid logger transport: #{loggerconfig['transport']}\n"
 
 if settings.server?.redis_auth?
     redis.auth(settings.server.redis_auth)
