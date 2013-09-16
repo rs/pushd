@@ -33,6 +33,7 @@ class EventPublisher extends events.EventEmitter
                 return
 
             logger.verbose "Pushing message for event #{event.name}"
+            logger.silly "data = #{JSON.stringify data}"
             logger.silly 'Title: ' + payload.localizedTitle('en')
             logger.silly payload.localizedMessage('en')
 
