@@ -103,9 +103,22 @@ describe 'Subscriber', ->
 
     xdescribe 'delete()', =>
         it 'should delete correctly', (done) =>
-            @subscriber.delete (deleted) =>
-                deleted.should.be.true
-                done()
+            message_received = no
+            callback_called = no
+            redis2 = redis.createClient()
+            redis2.on('ready', () =>
+                redis2.subscribe('user_removed')
+                redis2.on 'message', (channel, message) =>
+                    channel.should.be.equal 'user_removed'
+                    message.should.be.equal @subscriber.id
+                    message_received = yes
+                    redis2.unsubscribe('user_removed')
+
+                @subscriber.delete (deleted) =>
+                    deleted.should.be.true
+                    message_received.should.be.true
+                    done()
+            )
         it 'should not delete an already deleted subscription', (done) =>
             @subscriber.delete (deleted) =>
                 deleted.should.be.false
