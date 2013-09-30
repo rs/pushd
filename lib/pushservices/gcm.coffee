@@ -6,7 +6,7 @@ class PushServiceGCM
         if PushServiceGCM::tokenFormat.test(token)
             return token
 
-    constructor: (conf, @logger, tokenResolver) ->
+    constructor: (name, conf, @logger, tokenResolver) ->
         conf.concurrency ?= 10
         @driver = new gcm.Sender(conf.key)
         @multicastQueue = {}

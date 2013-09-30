@@ -36,7 +36,7 @@ for name, conf of settings when conf.enabled
         # special case for EventSource which isn't a pluggable push protocol
         eventSourceEnabled = yes
     else
-        pushServices.addService(name, new conf.class(conf, logger, tokenResolver))
+        pushServices.addService(name, new conf.class(name, conf, logger, tokenResolver))
 eventPublisher = new EventPublisher(pushServices)
 
 checkUserAndPassword = (username, password) =>

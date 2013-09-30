@@ -1,5 +1,5 @@
 apns = require 'apn'
-logger = require 'winston'
+#logger = require 'winston'
 util = require 'util'
 
 class PushServiceAPNS
@@ -8,7 +8,7 @@ class PushServiceAPNS
         if PushServiceAPNS::tokenFormat.test(token)
             return token.toLowerCase()
 
-    constructor: (conf, @logger, tokenResolver) ->
+    constructor: (name, conf, @logger, tokenResolver) ->
         conf.errorCallback = (errCode, note, device) =>
             @logger?.error("APNS Error #{errCode} for subscriber #{device?.subscriberId}")
         @driver = new apns.Connection(conf)
@@ -16,22 +16,24 @@ class PushServiceAPNS
         @payloadFilter = conf.payloadFilter
 
         @feedback = new apns.Feedback(conf)
-        logger.info "Registering for APNS Feedback #{util.inspect(conf)}"
+        @logger.info "Registering for APNS (#{name}) Feedback #{util.inspect(conf)}"
 
         # Handle Apple Feedbacks
         @feedback.on 'feedback', (feedbackData) =>
-            logger.info "Got feedback: #{util.inspect(feedbackData)}"
+            @logger.info "Got feedback (#{name}): #{util.inspect(feedbackData)}"
             feedbackData.forEach (item) =>
-                logger.info "Finding subscriber: #{item.device.toString()}"
+                @logger.info "Finding subscriber (#{name}): #{item.device.toString()}"
 
-                tokenResolver 'apns', item.device.toString(), (subscriber) =>
+                tokenResolver name, item.device.toString(), (subscriber) =>
+                    @logger.info "Subscriber (#{name}): #{util.inspect(subscriber)}"
                     subscriber?.get (info) ->
+                        @logger.info "Subscriber-info (#{name}): #{util.inspect(info)}"
                         if info.updated < item.time
-                            logger.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
+                            @logger.warn("APNS (#{name}) Automatic unregistration for subscriber #{subscriber.id}")
                             subscriber.delete()
 
         @feedback.on 'feedbackError', (error) =>
-            logger.error("APNS Feedback service error: #{error.message}, #{error.stack}")
+            @logger.error("APNS Feedback service error: #{error.message}, #{error.stack}")
 
         @feedback.start
 
