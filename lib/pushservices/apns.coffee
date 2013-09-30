@@ -20,16 +20,16 @@ class PushServiceAPNS
 
         # Handle Apple Feedbacks
         @feedback.on 'feedback', (feedbackData) =>
-            @logger.info "Got feedback (#{name}): #{util.inspect(feedbackData)}"
+            @logger.verbose "Got feedback (#{name}): #{util.inspect(feedbackData)}"
             feedbackData.forEach (item) =>
-                @logger.info "Finding subscriber (#{name}): #{item.device.toString()}"
+                @logger.verbose "Finding subscriber (#{name}): #{item.device.toString()}"
 
                 tokenResolver name, item.device.toString(), (subscriber) =>
-                    @logger.info "Subscriber (#{name}): #{util.inspect(subscriber.id)}"
+                    @logger.verbose "Subscriber (#{name}): #{util.inspect(subscriber.id)}"
                     subscriber?.get (info) =>
-                        @logger.info "Subscriber-info (#{name}): #{util.inspect(info)}"
+                        @logger.verbose "Subscriber-info (#{name}): #{util.inspect(info)}"
                         if info.updated < item.time
-                            @logger.warn("APNS (#{name}) Automatic unregistration for subscriber #{subscriber.id}")
+                            @logger.info("APNS (#{name}) Automatic unregistration for subscriber #{subscriber.id}")
                             subscriber.delete()
 
         @feedback.on 'feedbackError', (error) =>
