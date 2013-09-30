@@ -25,7 +25,7 @@ class PushServiceAPNS
                 @logger.info "Finding subscriber (#{name}): #{item.device.toString()}"
 
                 tokenResolver name, item.device.toString(), (subscriber) =>
-                    @logger.info "Subscriber (#{name}): #{util.inspect(subscriber)}"
+                    @logger.info "Subscriber (#{name}): #{util.inspect(subscriber.id)}"
                     subscriber?.get (info) ->
                         @logger.info "Subscriber-info (#{name}): #{util.inspect(info)}"
                         if info.updated < item.time
