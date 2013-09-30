@@ -82,6 +82,8 @@ class Subscriber
         @key = "subscriber:#{@id}"
 
     delete: (cb) ->
+        logger.info "Deleting subscriber: #{@id}"
+
         @redis.multi()
             # get subscriber's token
             .hmget(@key, 'proto', 'token')
