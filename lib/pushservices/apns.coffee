@@ -1,5 +1,6 @@
 apns = require 'apn'
 logger = require 'winston'
+util = require 'util'
 
 class PushServiceAPNS
     tokenFormat: /^[0-9a-f]{64}$/i
@@ -15,11 +16,11 @@ class PushServiceAPNS
         @payloadFilter = conf.payloadFilter
 
         @feedback = new apns.Feedback(conf)
-        logger.info "Registering for APNS Feedback #{conf}"
+        logger.info "Registering for APNS Feedback #{util.inspect(conf)}"
 
         # Handle Apple Feedbacks
         @feedback.on 'feedback', (feedbackData) =>
-            logger.info "Got feedback: #{feedbackData}"
+            logger.info "Got feedback: #{util.inspect(feedbackData)}"
             feedbackData.forEach (item) =>
                 tokenResolver 'apns', item.device.toString(), (subscriber) =>
                     subscriber?.get (info) ->
@@ -29,6 +30,8 @@ class PushServiceAPNS
 
         @feedback.on 'feedbackError', (error) =>
             logger.error("APNS Feedback service error: #{error.message}, #{error.stack}")
+
+        @feedback.start
 
     push: (subscriber, subOptions, payload) ->
         subscriber.get (info) =>
