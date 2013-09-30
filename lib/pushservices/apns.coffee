@@ -26,7 +26,7 @@ class PushServiceAPNS
 
                 tokenResolver name, item.device.toString(), (subscriber) =>
                     @logger.info "Subscriber (#{name}): #{util.inspect(subscriber.id)}"
-                    subscriber?.get (info) ->
+                    subscriber?.get (info) =>
                         @logger.info "Subscriber-info (#{name}): #{util.inspect(info)}"
                         if info.updated < item.time
                             @logger.warn("APNS (#{name}) Automatic unregistration for subscriber #{subscriber.id}")
