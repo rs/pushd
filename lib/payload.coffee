@@ -26,6 +26,7 @@ class Payload
                 when 'msg' then @msg.default = value
                 when 'sound' then @sound = value
                 when 'incrementBadge' then @incrementBadge = value != 'false'
+                when 'ttl' then @ttl = parseInt(value)
                 else
                     if ([prefix, subkey] = key.split('.', 2)).length is 2
                         @[prefix][subkey] = value
