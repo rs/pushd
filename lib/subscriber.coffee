@@ -82,11 +82,15 @@ class Subscriber
         @key = "subscriber:#{@id}"
 
     delete: (cb) ->
+        logger.info "Deleting subscriber: #{@id}"
+
         @redis.multi()
             # get subscriber's token
             .hmget(@key, 'proto', 'token')
             # gather subscriptions
             .zrange("subscriber:#{@id}:evts", 0, -1)
+            # notify listeners of removal
+            .publish('user_removed', @id)
             .exec (err, results) =>
                 [proto, token] = results[0]
                 events = results[1]

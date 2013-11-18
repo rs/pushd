@@ -430,6 +430,9 @@ To send an event to pushd over HTTP, POST some urlencoded key/value pairs to the
 
 The server will answer OK immediately. This doesn't mean the event has already been delivered.
 
+###### Single subscribe
+To send an event to a single subscriber, POST the same message to the `/event/EVENT_NAME/subscribers/SUBSCRIBER_ID` to only push it to a single subscriber.
+
 ##### UDP
 
 The UDP event posting API consists of a UDP datagram targeted at the UDP port 80 containing the URI of the event followed by the message content as query-string compressed using gzip:

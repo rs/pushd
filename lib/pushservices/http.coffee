@@ -7,7 +7,7 @@ class PushServiceHTTP
         if info?.protocol in ['http:', 'https:']
             return token
 
-    constructor: (@conf, @logger, tokenResolver) ->
+    constructor: (name, @conf, @logger, tokenResolver) ->
 
     push: (subscriber, subOptions, payload) ->
         subscriber.get (info) =>

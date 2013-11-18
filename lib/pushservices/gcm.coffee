@@ -6,7 +6,7 @@ class PushServiceGCM
         if PushServiceGCM::tokenFormat.test(token)
             return token
 
-    constructor: (conf, @logger, tokenResolver) ->
+    constructor: (name, conf, @logger, tokenResolver) ->
         conf.concurrency ?= 10
         @driver = new gcm.Sender(conf.key)
         @multicastQueue = {}
@@ -25,6 +25,8 @@ class PushServiceGCM
             else
                 note = new gcm.Message()
                 note.collapseKey = payload.event?.name
+                note.timeToLive = payload.ttl if payload.ttl
+
                 if subOptions?.ignore_message isnt true
                     if title = payload.localizedTitle(info.lang)
                         note.addData 'title', title

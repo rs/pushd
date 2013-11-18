@@ -6,7 +6,7 @@ class PushServiceMPNS
         if PushServiceMPNS::tokenFormat.test(token)
             return token
 
-    constructor: (@conf, @logger, tokenResolver) ->
+    constructor: (name, @conf, @logger, tokenResolver) ->
         @conf.type ?= "toast"
         if @conf.type is "tile" and not @conf.tileMapping
             throw new Error("Invalid MPNS configuration: missing `tileMapping` for `tile` type")

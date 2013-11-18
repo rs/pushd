@@ -5,7 +5,7 @@ logger = require 'winston'
 class EventPublisher extends events.EventEmitter
     constructor: (@pushServices) ->
 
-    publish: (event, data, cb) ->
+    publish: (event, data, subscriber, cb) ->
         try
             payload = new Payload(data)
             payload.event = event
@@ -36,30 +36,38 @@ class EventPublisher extends events.EventEmitter
             logger.silly 'Title: ' + payload.localizedTitle('en')
             logger.silly payload.localizedMessage('en')
 
-            protoCounts = {}
-            event.forEachSubscribers (subscriber, subOptions, done) =>
-                # action
-                subscriber.get (info) =>
-                    if info?.proto?
-                        if protoCounts[info.proto]?
-                            protoCounts[info.proto] += 1
-                        else
-                            protoCounts[info.proto] = 1
 
-                @pushServices.push(subscriber, subOptions, payload, done)
-            , (totalSubscribers) =>
-                # finished
-                logger.verbose "Pushed to #{totalSubscribers} subscribers"
-                for proto, count of protoCounts
-                    logger.verbose "#{count} #{proto} subscribers"
-    
-                if totalSubscribers > 0
-                    # update some event' stats
-                    event.log =>
-                        cb(totalSubscribers) if cb
-                else
-                    # if there is no subscriber, cleanup the event
-                    event.delete =>
-                        cb(0) if cb
+            if subscriber?
+                subscriber.getSubscription event, (options) =>
+                    if options?
+                        @pushServices.push(subscriber, options, payload, () ->
+                            logger.verbose "Pushed to subscriber"
+                        )
+            else
+                protoCounts = {}
+                event.forEachSubscribers (subscriber, subOptions, done) =>
+                    # action
+                    subscriber.get (info) =>
+                        if info?.proto?
+                            if protoCounts[info.proto]?
+                                protoCounts[info.proto] += 1
+                            else
+                                protoCounts[info.proto] = 1
+
+                    @pushServices.push(subscriber, subOptions, payload, done)
+                , (totalSubscribers) =>
+                    # finished
+                    logger.verbose "Pushed to #{totalSubscribers} subscribers"
+                    for proto, count of protoCounts
+                        logger.verbose "#{count} #{proto} subscribers"
+
+                    if totalSubscribers > 0
+                        # update some event' stats
+                        event.log =>
+                            cb(totalSubscribers) if cb
+                    else
+                        # if there is no subscriber, cleanup the event
+                        event.delete =>
+                            cb(0) if cb
 
 exports.EventPublisher = EventPublisher
