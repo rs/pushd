@@ -88,7 +88,7 @@ On iOS, you must update the badge value to inform pushd the user read the pendin
 
 ### Subscriptions
 
-Depending on your service, your app may auto-subscribe the subscriber to some events or ask the user which events he wants to be subscribed to (an event is identified as an arbitrary string meaningful for you service). For each event your app wants to be subscribed to, a call to the pushd API must be performed.
+Depending on your service, your app may auto-subscribe the subscriber to some events or ask the user which events he wants to be subscribed to (an event is identified as an arbitrary string meaningful for your service). For each event your app wants to be subscribed to, a call to the pushd API must be performed.
 
 For instance, if your app is news related, you may want to create one subscriptable event for each news category. So if your user wants to subscribe to `sport` events, the following call to pushd has to be performed:
 
