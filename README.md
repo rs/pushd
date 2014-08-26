@@ -45,7 +45,7 @@ Glossary
 - `Application Data Provider`: The service emitting `Events` (i.e: other users actions) to be notified to `Subscribers` (i.e.: mobiles app)
 - `Subscribers`: Entities wanting to be notified about certain type of `Events`. There's two kind of subscribers: offline subscribers and online subscribers. The current implementation of pushd does only support offline subscribers. Difference between online and offline subscribers is that online subscribers are required to stay connected to maintain subscriptions while offline subscribers are persisted in pushd database, and only have to instruct pushd when they change their status (subscriptions etc.).
 - `Event`: A string with associated metadata representing an action performed on the `Application Data Provider`. Events are emitted by the `Application Data Provider` (i.e.: a web site or your application's server-side backend), and `Subscribers` can subscribe to them in order to be notified by the `Protocol` of their choice.
-- `Protocol`: A communication standard to send notification back to the `Subscriber`. Protocols are pluggable in pushd so you can add your own custom protocol. By default, pushd is bundled with support for APNs (iOS), C2DM (Android) and MPNS (Windows Phone). More protocols will be added in the future.
+- `Protocol`: A communication standard to send notification back to the `Subscriber`. Protocols are pluggable in pushd so you can add your own custom protocol. By default, pushd is bundled with support for APNs (iOS), C2DM/GCM (Android) and MPNS (Windows Phone). More protocols will be added in the future.
 
 Getting Started
 ---------------
@@ -88,7 +88,7 @@ On iOS, you must update the badge value to inform pushd the user read the pendin
 
 ### Subscriptions
 
-Depending on your service, your app may auto-subscribe the subscriber to some events or ask the user which events he wants to be subscribed to (an event is identified as an arbitrary string meaningful for you service). For each event your app wants to be subscribed to, a call to the pushd API must be performed.
+Depending on your service, your app may auto-subscribe the subscriber to some events or ask the user which events he wants to be subscribed to (an event is identified as an arbitrary string meaningful for your service). For each event your app wants to be subscribed to, a call to the pushd API must be performed.
 
 For instance, if your app is news related, you may want to create one subscriptable event for each news category. So if your user wants to subscribe to `sport` events, the following call to pushd has to be performed:
 
@@ -201,7 +201,7 @@ Register a subscriber by POSTing on `/subscribers` with some subscriber informat
 
 - `proto`: The protocol to be used for the subscriber. Use one of the following values:
 	- `apns`: iOS (Apple Push Notification service)
-	- `c2dm`: Android (Cloud to subscriber Messaging)
+	- `gcm` or `c2dm`: Android (Cloud to subscriber Messaging)
 	- `mpns` Window Phone (Microsoft Push Notification Service)
 - `token`: The device registration id delivered by the platform's push notification service
 
