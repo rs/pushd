@@ -116,7 +116,7 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
             , (result) ->
                 if not result
                     logger.error "Failed to set properties for #{req.subscriber.id}"
-                res.send if result then 200 else 400
+                res.send if result then 204 else 400
 
     # Get subscriber subscription options
     app.get '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->
