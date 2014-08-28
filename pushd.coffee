@@ -4,13 +4,17 @@ zlib = require 'zlib'
 url = require 'url'
 Netmask = require('netmask').Netmask
 settings = require './settings'
-redis = require('redis').createClient(settings.server.redis_socket or settings.server.redis_port, settings.server.redis_host)
 Subscriber = require('./lib/subscriber').Subscriber
 EventPublisher = require('./lib/eventpublisher').EventPublisher
 Event = require('./lib/event').Event
 PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
 logger = require 'winston'
+
+if settings.server.redis_socket?
+    redis = require('redis').createClient(settings.server.redis_socket)
+else if settings.server.redis_port? or settings.server.redis_host?
+    redis = require('redis').createClient(settings.server.redis_port, settings.server.redis_host)
 
 if settings.loglevel?
     logger.remove(logger.transports.Console);

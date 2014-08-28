@@ -22,7 +22,7 @@
     "scripts":
     {
         "start": "sudo node server.js",
-        "test": "mocha --compilers coffee:coffee-script --reporter spec tests/*.coffee"
+        "test": "mocha --compilers coffee:coffee-script/register --reporter spec tests/*.coffee"
     },
     "engines":
     {
