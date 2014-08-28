@@ -19,7 +19,7 @@ class PushServiceAPNS
             @logger?.debug("APNS feedback returned #{feedbackData.length} devices")
             feedbackData.forEach (item) =>
                 tokenResolver 'apns', item.device.toString(), (subscriber) =>
-                    subscriber?.get (info) ->
+                    subscriber?.get (info) =>
                         if info.updated < item.time
                             @logger?.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
                             subscriber.delete()
