@@ -16,6 +16,7 @@ class PushServiceAPNS
         @feedback = new apns.Feedback(conf)
         # Handle Apple Feedbacks
         @feedback.on 'feedback', (feedbackData) =>
+            @logger?.debug("APNS feedback returned #{feedbackData.length} devices")
             feedbackData.forEach (item) =>
                 tokenResolver 'apns', item.device.toString(), (subscriber) =>
                     subscriber?.get (info) ->
