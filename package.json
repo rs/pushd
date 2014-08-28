@@ -39,7 +39,7 @@
         "express": "~3.16.8",
         "hiredis": "~0.1.17",
         "redis": "~0.12.1",
-        "netmask": "~0.0.4",
+        "netmask": "~1.0.4",
         "winston": "~0.7.3"
     },
     "devDependencies":
