@@ -99,3 +99,21 @@ exports['mpns-raw'] =
     enabled: yes
     class: require('./lib/pushservices/mpns').PushServiceMPNS
     type: 'raw'
+
+# Transports: Console, File, Http
+# 
+# Common options:
+# level:
+#   error: log errors only
+#   warn: log also warnings
+#   info: log status messages
+#   verbose: log event and subscriber creation and deletion
+#   silly: log submitted message content
+#
+# See https://github.com/flatiron/winston#working-with-transports for
+# other transport-specific options.
+exports['logging'] = [
+        transport: 'Console'
+        options:
+            level: 'info'
+    ]
