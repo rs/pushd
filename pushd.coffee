@@ -53,7 +53,7 @@ checkUserAndPassword = (username, password) =>
         if not settings.server.auth[username]?
             logger.error "Unknown user #{username}"
             return false
-        passwordOK = password is settings.server.auth[username].password
+        passwordOK = password? and password is settings.server.auth[username].password
         if not passwordOK
             logger.error "Invalid password for #{username}"
         return passwordOK
