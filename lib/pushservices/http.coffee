@@ -7,7 +7,7 @@ class PushServiceHTTP
         if info?.protocol in ['http:', 'https:']
             return token
 
-    constructor: (@conf, @logger, tokenResolver) ->
+    constructor: (@conf, @logger, tokenResolver, @failCallback) ->
 
     push: (subscriber, subOptions, payload) ->
         subscriber.get (info) =>
@@ -26,6 +26,7 @@ class PushServiceHTTP
             req = http.request(options)
 
             req.on 'error', (e) =>
+                @failCallback()
                 # TODO: allow some error before removing
                 #@logger?.warn("HTTP Automatic unregistration for subscriber #{subscriber.id}")
                 #subscriber.delete()

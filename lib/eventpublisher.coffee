@@ -3,7 +3,7 @@ Payload = require('./payload').Payload
 logger = require 'winston'
 
 class EventPublisher extends events.EventEmitter
-    constructor: (@pushServices) ->
+    constructor: (@pushServices, @statistics) ->
 
     publish: (event, data, cb) ->
         try
@@ -52,9 +52,12 @@ class EventPublisher extends events.EventEmitter
                 logger.verbose "Pushed to #{totalSubscribers} subscribers"
                 for proto, count of protoCounts
                     logger.verbose "#{count} #{proto} subscribers"
-    
+                    
+                    # update global stats
+                    @statistics.increasePublishedCount(proto, count)
+
                 if totalSubscribers > 0
-                    # update some event' stats
+                    # update some event stats
                     event.log =>
                         cb(totalSubscribers) if cb
                 else

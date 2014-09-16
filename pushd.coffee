@@ -9,6 +9,7 @@ EventPublisher = require('./lib/eventpublisher').EventPublisher
 Event = require('./lib/event').Event
 PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
+Statistics = require('./lib/statistics').Statistics
 logger = require 'winston'
 
 if settings.server.redis_socket?
@@ -23,25 +24,11 @@ if settings.loglevel?
 if settings.server?.redis_auth?
     redis.auth(settings.server.redis_auth)
 
-createSubscriber = (fields, cb) ->
-    logger.verbose "creating subscriber proto = #{fields.proto}, token = #{fields.token}"
-    throw new Error("Invalid value for `proto'") unless service = pushServices.getService(fields.proto)
-    throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
-    Subscriber::create(redis, fields, cb)
 
-tokenResolver = (proto, token, cb) ->
-    Subscriber::getInstanceFromToken redis, proto, token, cb
 
-eventSourceEnabled = no
-pushServices = new PushServices()
-for name, conf of settings when conf.enabled
-    logger.info "Registering push service: #{name}"
-    if name is 'event-source'
-        # special case for EventSource which isn't a pluggable push protocol
-        eventSourceEnabled = yes
-    else
-        pushServices.addService(name, new conf.class(conf, logger, tokenResolver))
-eventPublisher = new EventPublisher(pushServices)
+# Global express configuration
+
+app = express()
 
 checkUserAndPassword = (username, password) =>
     if settings.server?.auth?
@@ -53,8 +40,6 @@ checkUserAndPassword = (username, password) =>
             logger.error "Invalid password for #{username}"
         return passwordOK
     return false
-
-app = express()
 
 app.configure ->
     app.use(express.logger(':method :url :status')) if settings.server?.access_log
@@ -73,19 +58,48 @@ app.param 'subscriber_id', (req, res, next, id) ->
     catch error
         res.json error: error.message, 400
 
-getEventFromId = (id) ->
-    return new Event(redis, id)
-
-testSubscriber = (subscriber) ->
-    pushServices.push(subscriber, null, new Payload({msg: "Test", "data.test": "ok"}))
-
 app.param 'event_id', (req, res, next, id) ->
     try
-        req.event = getEventFromId(req.params.event_id)
+        req.event = new Event(redis, req.params.event_id)
         delete req.params.event_id
         next()
     catch error
         res.json error: error.message, 400
+
+
+
+# EventPublisher construction by adding all services, uses statistics from redis
+
+tokenResolver = (proto, token, cb) ->
+    Subscriber::getInstanceFromToken redis, proto, token, cb
+
+statistics = new Statistics(redis)
+createPushFailureLogger = (proto) ->
+    -> statistics.increasePushErrorCount(proto, 1)
+
+eventSourceEnabled = no
+pushServices = new PushServices()
+for name, conf of settings when conf.enabled
+    logger.info "Registering push service: #{name}"
+    if name is 'event-source'
+        # special case for EventSource which isn't a pluggable push protocol
+        eventSourceEnabled = yes
+    else
+        pushServices.addService(name, new conf.class(conf, logger, tokenResolver, createPushFailureLogger name))
+eventPublisher = new EventPublisher(pushServices, statistics)
+
+
+
+# Creation of callbacks for the API functionality
+
+createSubscriber = (fields, cb) ->
+    logger.verbose "creating subscriber proto = #{fields.proto}, token = #{fields.token}"
+    throw new Error("Invalid value for `proto'") unless service = pushServices.getService(fields.proto)
+    throw new Error("Invalid value for `token'") unless fields.token = service.validateToken(fields.token)
+    Subscriber::create(redis, fields, cb)
+
+getEventFromId = (id) ->
+    return new Event(redis, id)
 
 authorize = (realm) ->
     if settings.server?.auth?
@@ -118,7 +132,16 @@ authorize = (realm) ->
     else
         return (req, res, next) -> next()
 
-require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher)
+testSubscriber = (subscriber) ->
+    pushServices.push(subscriber, null, new Payload({msg: "Test", "data.test": "ok"}))
+
+collectStatistics = (cb) ->
+    statistics.collectStatistics cb
+
+listEvents = (cb) ->
+    Event::listEvents(redis, cb)
+
+require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, collectStatistics, listEvents, eventPublisher)
 if eventSourceEnabled
     require('./lib/eventsource').setup(app, authorize, eventPublisher)
 
