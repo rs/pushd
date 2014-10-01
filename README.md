@@ -338,6 +338,20 @@ To unsubscribe from an event, perform a DELETE on the subscription URL.
 - `400` Invalid subscriber id or event name format
 - `404` The specified subscriber does not exist
 
+#### List subscribers
+
+To get the number of active subscribers, perform a GET on `/subscriber-count`. Note that there might be more active subscribers than applications because of duplicate subscriptions.
+
+    > GET /subscriber-count HTTP/1.1
+    >
+    ---
+    < HTTP/1.1 200 OK
+    < Content-Type: application/json; charset=utf-8
+    <
+    < {
+    <   "count": 4
+    < }
+
 #### List subscribers’ Subscriptions
 
 To get the list of events a subscriber is subscribed to, perform a GET on `/subscriber/SUBSCRIBER_ID/subscriptions`.
