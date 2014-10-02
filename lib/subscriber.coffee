@@ -258,5 +258,8 @@ class Subscriber
                 else
                     cb(null) if cb # null if subscriber doesn't exist
 
+    countSubscribers: (redis, cb) ->
+        redis.zcard "subscribers", (err, value) ->
+            cb(value) if cb
 
 exports.Subscriber = Subscriber
