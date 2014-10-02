@@ -13,6 +13,8 @@ class Payload
         @data = {}
         @var = {}
         @incrementBadge = yes
+        @category = {}
+        @contentAvalilable = false
 
         # Read fields
         for own key, value of data
@@ -26,6 +28,8 @@ class Payload
                 when 'msg' then @msg.default = value
                 when 'sound' then @sound = value
                 when 'incrementBadge' then @incrementBadge = value != 'false'
+                when 'category' then @category = value
+                when 'contentAvalilable' then @contentAvalilable = value != 'false'
                 else
                     if ([prefix, subkey] = key.split('.', 2)).length is 2
                         @[prefix][subkey] = value

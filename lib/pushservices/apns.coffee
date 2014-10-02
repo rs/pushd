@@ -39,6 +39,8 @@ class PushServiceAPNS
 
             note.badge = badge if not isNaN(badge)
             note.sound = payload.sound
+            note.category = payload.category
+            note.contentAvailable = payload.contentAvailable
             if @payloadFilter?
                 for key, val of payload.data
                     note.payload[key] = val if key in @payloadFilter
