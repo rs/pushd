@@ -12,6 +12,8 @@ class PushServiceAPNS
         @driver = new apns.Connection(conf)
 
         @payloadFilter = conf.payloadFilter
+        
+        @conf = conf
 
         @feedback = new apns.Feedback(conf)
         # Handle Apple Feedbacks
@@ -36,11 +38,20 @@ class PushServiceAPNS
             badge = parseInt(info.badge)
             if payload.incrementBadge
                 badge += 1
+                
+            category = payload.category
+            contentAvailable = payload.contentAvailable
+            
+            if not contentAvailable? and @conf.contentAvailable?
+            	contentAvailable = @conf.contentAvailable
+            
+            if not category? and @conf.category?
+            	category = @conf.category
 
             note.badge = badge if not isNaN(badge)
             note.sound = payload.sound
-            note.category = payload.category
-            note.contentAvailable = payload.contentAvailable
+            note.category = category
+            note.contentAvailable = contentAvailable
             if @payloadFilter?
                 for key, val of payload.data
                     note.payload[key] = val if key in @payloadFilter
