@@ -8,7 +8,7 @@ describe 'Payload', ->
             (=> new Payload('var.test': 'value')).should.throw('Empty payload')
             (=> new Payload(sound: 'value')).should.throw('Empty payload')
             (=> new Payload(category: 'value')).should.throw('Empty payload')
-            (=> new Payload(contentAvalilable: 'value')).should.throw('Empty payload')
+            (=> new Payload(contentAvailable: 'value')).should.throw('Empty payload')
 
     describe 'with invalid key', =>
         it 'should throw an error', =>

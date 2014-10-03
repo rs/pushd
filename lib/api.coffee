@@ -4,7 +4,7 @@ logger = require 'winston'
 
 filterFields = (params) ->
     fields = {}
-    fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version', 'category','contentAvailable']
+    fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version', 'category', 'contentAvailable']
     return fields
 
 exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher) ->
