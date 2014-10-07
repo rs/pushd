@@ -14,6 +14,7 @@ class PushServiceAPNS
         @payloadFilter = conf.payloadFilter
         
         @conf = conf
+        @logger = logger
 
         @feedback = new apns.Feedback(conf)
         # Handle Apple Feedbacks
@@ -38,15 +39,15 @@ class PushServiceAPNS
             badge = parseInt(info.badge)
             if payload.incrementBadge
                 badge += 1
-                
+            
             category = payload.category
             contentAvailable = payload.contentAvailable
-            
+
             if not contentAvailable? and @conf.contentAvailable?
-            	contentAvailable = @conf.contentAvailable
-            
+              contentAvailable = @conf.contentAvailable
+
             if not category? and @conf.category?
-            	category = @conf.category
+              category = @conf.category
 
             note.badge = badge if not isNaN(badge)
             note.sound = payload.sound

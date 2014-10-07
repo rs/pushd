@@ -33,7 +33,7 @@ exports['apns'] =
     cacheLength: 100
     # Uncomment to set the default value for parameter.
     # This setting not overrides the value for the parameter that is set in the payload fot event request.
-    # category: show
+    # category: 'show'
     # contentAvailable: true
     # Selects data keys which are allowed to be sent with the notification
     # Keep in mind that APNS limits notification payload size to 256 bytes
@@ -53,7 +53,7 @@ exports['apns'] =
 #     gateway: 'gateway.sandbox.push.apple.com'
 #	  # Uncomment to set the default value for parameter.
 #     # This setting not overrides the value for the parameter that is set in the payload fot event request.
-#     # category: show
+#     # category: 'show'
 #     # contentAvailable: true
 
 exports['gcm'] =
