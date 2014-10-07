@@ -14,7 +14,6 @@ class PushServiceAPNS
         @payloadFilter = conf.payloadFilter
         
         @conf = conf
-        @logger = logger
 
         @feedback = new apns.Feedback(conf)
         # Handle Apple Feedbacks
