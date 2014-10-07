@@ -13,7 +13,6 @@ class Payload
         @data = {}
         @var = {}
         @incrementBadge = yes
-        @category = {}
         @contentAvailable = false
 
         # Read fields
