@@ -13,7 +13,6 @@ class Payload
         @data = {}
         @var = {}
         @incrementBadge = yes
-        @contentAvailable = false
 
         # Read fields
         for own key, value of data
