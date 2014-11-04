@@ -9,6 +9,11 @@ class PushServiceAPNS
     constructor: (conf, @logger, tokenResolver) ->
         conf.errorCallback = (errCode, note, device) =>
             @logger?.error("APNS Error #{errCode} for subscriber #{device?.subscriberId}")
+
+        # The APN library decided to change the default version of those variables in 1.5.1
+        # Maintain the previous defaults in order not to break backward compat.
+        conf['gateway'] ||= 'gateway.push.apple.com'
+        conf['address'] ||= 'feedback.push.apple.com'
         @driver = new apns.Connection(conf)
 
         @payloadFilter = conf.payloadFilter
