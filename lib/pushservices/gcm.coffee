@@ -53,16 +53,16 @@ class PushServiceGCM
 
     handleResult: (result, subscriber) ->
         if result.messageId or result.message_id
-            # if result.canonicalRegistrationId
-                # TODO: update subscriber token
+            if result.registration_id
+                @logger?.warn("GCM Removing subscriber #{subscriber.id} of canonical #{result.canonical_id}")
+                subscriber.delete()
         else
             error = result.error or result.errorCode
             if error is "NotRegistered" or error is "InvalidRegistration"
-                @logger?.warn("GCM Automatic unregistration for subscriber #{subscriber.id}")
+                @logger?.warn("GCM Automatic unregistration for subscriber #{subscriber.id} due to #{error}")
                 subscriber.delete()
             else
                 @logger?.error("GCM Error: #{error}")
-
 
 
 exports.PushServiceGCM = PushServiceGCM
