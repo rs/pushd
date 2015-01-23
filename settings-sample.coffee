@@ -48,6 +48,15 @@ exports['apns'] =
 #     cacheLength: 100
 #     gateway: 'gateway.sandbox.push.apple.com'
 
+exports["wns-toast"] =
+    enabled: yes
+    client_id: 'ms-app://SID-from-developer-console'
+    client_secret: 'client-secret-from-developer-console'
+    class: require('./lib/pushservices/wns').PushServiceWNS
+    type: 'toast'
+    # Any parameters used here must be provided in each push event.
+    launchTemplate: '/MainPage.xaml?cmid=${data.cmid}'
+
 exports['gcm'] =
     enabled: yes
     class: require('./lib/pushservices/gcm').PushServiceGCM
