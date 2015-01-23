@@ -54,7 +54,7 @@ exports["wns-toast"] =
     client_secret: 'client-secret-from-developer-console'
     class: require('./lib/pushservices/wns').PushServiceWNS
     type: 'toast'
-    # Any parameters used here must be provided in each push event.
+    # Any parameters used here must be present in each push event.
     launchTemplate: '/MainPage.xaml?cmid=${data.cmid}'
 
 exports['gcm'] =
