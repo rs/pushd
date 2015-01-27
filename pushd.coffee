@@ -1,4 +1,5 @@
 express = require 'express'
+bodyParser = require 'body-parser'
 dgram = require 'dgram'
 zlib = require 'zlib'
 url = require 'url'
@@ -61,14 +62,13 @@ checkUserAndPassword = (username, password) =>
 
 app = express()
 
-app.configure ->
-    app.use(express.logger(':method :url :status')) if settings.server?.access_log
-    app.use(express.limit('1mb')) # limit posted data to 1MB
-    if settings.server?.auth? and not settings.server?.acl?
-        app.use(express.basicAuth checkUserAndPassword)
-    app.use(express.bodyParser())
-    app.use(app.router)
-    app.disable('x-powered-by');
+app.use(express.logger(':method :url :status')) if settings.server?.access_log
+if settings.server?.auth? and not settings.server?.acl?
+    app.use(express.basicAuth checkUserAndPassword)
+app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }))
+app.use(bodyParser.json({ limit: '1mb' }))
+app.use(app.router)
+app.disable('x-powered-by');
 
 app.param 'subscriber_id', (req, res, next, id) ->
     try

@@ -2,7 +2,7 @@
     "author": "Olivier Poitrey <rs@dailymotion.com>",
     "name": "pushd",
     "description": "Blazing fast multi-protocol mobile push notification service",
-    "version": "1.6.2",
+    "version": "1.6.5",
     "homepage": "https://github.com/rs/pushd",
     "keywords": ["push", "notification", "apns", "c2dm", "mpns", "ios", "android", "windows", "phone"],
     "repository":
@@ -31,12 +31,13 @@
     "dependencies":
     {
         "coffee-script": "~1.8.0",
-        "apn": "1.6.1",
+        "apn": "1.6.2",
         "c2dm": "1.2.1",
         "node-gcm": "0.9.12",
         "mpns": "2.1.0",
         "async": "~0.2.5",
         "express": "~3.16.8",
+        "body-parser": "~1.9.0",
         "hiredis": "~0.1.17",
         "redis": "~0.12.1",
         "netmask": "~1.0.4",
