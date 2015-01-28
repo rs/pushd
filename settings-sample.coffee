@@ -63,7 +63,7 @@ exports["wns-toast"] =
     class: require('./lib/pushservices/wns').PushServiceWNS
     type: 'toast'
     # Any parameters used here must be present in each push event.
-    launchTemplate: '/MainPage.xaml?cmid=${data.cmid}'
+    launchTemplate: '/Page.xaml?foo=${data.foo}'
 
 exports['gcm'] =
     enabled: yes
