@@ -41,7 +41,8 @@
         "hiredis": "~0.1.17",
         "redis": "~0.12.1",
         "netmask": "~1.0.4",
-        "winston": "~0.7.3"
+        "winston": "~0.7.3",
+        "wns": "git://github.com/futurice/wns.git#28bfe39a3be8c64f3d72b7c7a5cac77c049b137a"
     },
     "devDependencies":
     {
