@@ -24,10 +24,11 @@ Features
 - Redis backend
 - Fracking fast!
 
-[APNs]: https://github.com/rs/pushd/wiki/APNs
-[GCM]: https://github.com/rs/pushd/wiki/GCM
-[MPNS]: https://github.com/rs/pushd/wiki/MPNS
-[HTTP]: https://github.com/rs/pushd/wiki/HTTP
+[APNs]: doc/APNs.md
+[GCM]: doc/GCM.md
+[MPNS]: doc/MPNS.md
+[HTTP]: doc/HTTP.md
+[WNS]: doc/WNS.md
 
 Installation
 ------------
