@@ -129,6 +129,12 @@ class Subscriber
                         num = parseInt(value)
                         @info[key] = if num + '' is value then num else value
                     cb(@info)
+                else if @info?.updated? # subscriber exists
+                    # transform numeric value to number type
+                    for own key, value of @info
+                        num = parseInt(value)
+                        @info[key] = if num + '' is value then num else value
+                    cb(@info)
                 else
                     cb(@info = null) # null if subscriber doesn't exist + flush cache
 
