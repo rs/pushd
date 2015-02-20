@@ -66,9 +66,8 @@ class PushServiceMPNS
                             else
                                 @logger?.error("MPNS Error: (#{error.statusCode}) #{error.innerError}")
                         else
-                            @logger?.verbose("MPNS result: #{JSON.stringify result}")
+                            @logger?.debug("MPNS result: #{JSON.stringify result}")
                 catch error
                     @logger?.error("MPNS Error: #{error}")
 
 exports.PushServiceMPNS = PushServiceMPNS
-

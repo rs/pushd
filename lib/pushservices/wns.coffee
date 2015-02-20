@@ -25,7 +25,7 @@ class PushServiceWNS
                         if @conf.launchTemplate and info.version >= 7.5
                             try
                                 launch = payload.compileTemplate(@conf.launchTemplate)
-                                @logger?.debug("Launch: #{launch}")
+                                @logger?.silly("Launch: #{launch}")
                             catch e
                                 @logger?.error("Cannot compile WNS param template: #{e}")
                                 return
@@ -53,14 +53,14 @@ class PushServiceWNS
                     options = { client_id: @conf.client_id, client_secret: @conf.client_secret }
                     if launch?
                         options["launch"] = launch
-                    @logger?.verbose("WNS client URL: #{info.token}")
+                    @logger?.silly("WNS client URL: #{info.token}")
                     sender info.token, note, options, (error, result) =>
                         if error
                             if error.shouldDeleteChannel
                                 @logger?.warn("WNS Automatic unregistration for subscriber #{subscriber.id}")
                                 subscriber.delete()
                         else
-                            @logger?.verbose("WNS result: #{JSON.stringify result}")
+                            @logger?.debug("WNS result: #{JSON.stringify result}")
                 catch error
                     @logger?.error("WNS Error: #{error}")
 
