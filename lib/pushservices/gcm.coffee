@@ -54,6 +54,9 @@ class PushServiceGCM
     handleResult: (result, subscriber) ->
         if result.messageId or result.message_id
             if result.registration_id
+                # GCM sends registration_id if there is duplicate subscription with same device/app ID.
+                # Remove subscriber to avoid duplicate notifications. GCM does not send this to latest
+                # subscription so there is no race condition where both subscriptions will be deleted.
                 @logger?.warn("GCM Removing subscriber #{subscriber.id} of canonical #{result.canonical_id}")
                 subscriber.delete()
         else
