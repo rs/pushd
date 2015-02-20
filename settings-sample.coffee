@@ -69,6 +69,10 @@ exports['gcm'] =
     enabled: yes
     class: require('./lib/pushservices/gcm').PushServiceGCM
     key: 'GCM API KEY HERE'
+    # If GCM reports another registration, automatically delete
+    # earlier one. Normally this is okay, but with multiple different
+    # push servers it might be necessary to disable this.
+    deleteDuplicatesAutomatically: yes
 
 # # Legacy Android Push Service
 # exports['c2dm'] =
