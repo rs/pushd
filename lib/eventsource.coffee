@@ -31,7 +31,8 @@ exports.setup = (app, authorize, eventPublisher) ->
 
         eventNames = req.query.events.split ' '
 
-        req.socket.setTimeout(Infinity);
+		# Node.js 0.12 requires timeout argument be finite
+        req.socket.setTimeout(0x7FFFFFFF);
         req.socket.setNoDelay(true);
         res.set
             'Content-Type': 'text/event-stream',
