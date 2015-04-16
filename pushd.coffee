@@ -64,7 +64,13 @@ app = express()
 
 app.use(express.logger(':method :url :status')) if settings.server?.access_log
 if settings.server?.auth? and not settings.server?.acl?
-    app.use(express.basicAuth checkUserAndPassword)
+    app.use((req, res, next) ->
+        if req.method == 'OPTIONS'
+            next()
+            return
+
+        express.basicAuth(checkUserAndPassword)(req, res, next)
+    )
 app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }))
 app.use(bodyParser.json({ limit: '1mb' }))
 app.use(app.router)
