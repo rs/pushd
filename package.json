@@ -2,7 +2,7 @@
     "author": "Olivier Poitrey <rs@dailymotion.com>",
     "name": "pushd",
     "description": "Blazing fast multi-protocol mobile push notification service",
-    "version": "1.5.10",
+    "version": "1.6.5",
     "homepage": "https://github.com/rs/pushd",
     "keywords": ["push", "notification", "apns", "c2dm", "mpns", "ios", "android", "windows", "phone"],
     "repository":
@@ -22,25 +22,27 @@
     "scripts":
     {
         "start": "sudo node server.js",
-        "test": "mocha --compilers coffee:coffee-script --reporter spec tests/*.coffee"
+        "test": "mocha --compilers coffee:coffee-script/register --reporter spec tests/*.coffee"
     },
     "engines":
     {
-        "node": "~0.8.19"
+        "node": "~0.10.0"
     },
     "dependencies":
     {
-        "coffee-script": "~1.2.0",
-        "apn": "1.3.2",
-        "c2dm": "1.1.0",
-        "node-gcm": "0.9.6",
-        "mpns": "1.2.7",
+        "coffee-script": "~1.8.0",
+        "apn": "1.6.2",
+        "c2dm": "1.2.1",
+        "node-gcm": "0.9.12",
+        "mpns": "2.1.0",
         "async": "~0.2.5",
-        "express": "~3.1.0",
-        "hiredis": "~0.1.14",
-        "redis": "~0.8.2",
-        "netmask": "~0.0.2",
-        "winston": "~0.6.2"
+        "express": "~3.16.8",
+        "body-parser": "~1.9.0",
+        "hiredis": "~0.1.17",
+        "redis": "~0.12.1",
+        "netmask": "~1.0.4",
+        "winston": "~0.7.3",
+        "wns": "git://github.com/futurice/wns.git#28bfe39a3be8c64f3d72b7c7a5cac77c049b137a"
     },
     "devDependencies":
     {

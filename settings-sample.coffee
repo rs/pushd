@@ -31,6 +31,10 @@ exports['apns'] =
     cert: 'apns-cert.pem'
     key: 'apns-key.pem'
     cacheLength: 100
+    # Uncomment to set the default value for parameter.
+    # This setting not overrides the value for the parameter that is set in the payload fot event request.
+    # category: 'show'
+    # contentAvailable: true
     # Selects data keys which are allowed to be sent with the notification
     # Keep in mind that APNS limits notification payload size to 256 bytes
     payloadFilter: ['messageFrom']
@@ -47,6 +51,19 @@ exports['apns'] =
 #     key: 'apns-key.pem'
 #     cacheLength: 100
 #     gateway: 'gateway.sandbox.push.apple.com'
+#	  # Uncomment to set the default value for parameter.
+#     # This setting not overrides the value for the parameter that is set in the payload fot event request.
+#     # category: 'show'
+#     # contentAvailable: true
+
+exports["wns-toast"] =
+    enabled: yes
+    client_id: 'ms-app://SID-from-developer-console'
+    client_secret: 'client-secret-from-developer-console'
+    class: require('./lib/pushservices/wns').PushServiceWNS
+    type: 'toast'
+    # Any parameters used here must be present in each push event.
+    launchTemplate: '/Page.xaml?foo=${data.foo}'
 
 exports['gcm'] =
     enabled: yes
@@ -99,3 +116,21 @@ exports['mpns-raw'] =
     enabled: yes
     class: require('./lib/pushservices/mpns').PushServiceMPNS
     type: 'raw'
+
+# Transports: Console, File, Http
+# 
+# Common options:
+# level:
+#   error: log errors only
+#   warn: log also warnings
+#   info: log status messages
+#   verbose: log event and subscriber creation and deletion
+#   silly: log submitted message content
+#
+# See https://github.com/flatiron/winston#working-with-transports for
+# other transport-specific options.
+exports['logging'] = [
+        transport: 'Console'
+        options:
+            level: 'info'
+    ]

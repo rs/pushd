@@ -144,7 +144,7 @@ class Subscriber
             .hmset(@key, fieldsAndValues)
             .exec (err, results) =>
                 @info = null # flush cache
-                if results[0]? # subscriber exists?
+                if results && results[0]? # subscriber exists?
                     cb(true) if cb
                 else
                     # remove edited fields

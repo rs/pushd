@@ -1,10 +1,10 @@
 express = require 'express'
+bodyParser = require 'body-parser'
 dgram = require 'dgram'
 zlib = require 'zlib'
 url = require 'url'
 Netmask = require('netmask').Netmask
 settings = require './settings'
-redis = require('redis').createClient(settings.server.redis_socket or settings.server.redis_port, settings.server.redis_host)
 Subscriber = require('./lib/subscriber').Subscriber
 EventPublisher = require('./lib/eventpublisher').EventPublisher
 Event = require('./lib/event').Event
@@ -12,9 +12,19 @@ PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
 logger = require 'winston'
 
-if settings.loglevel?
-    logger.remove(logger.transports.Console);
-    logger.add(logger.transports.Console, { level: settings.loglevel });
+if settings.server.redis_socket?
+    redis = require('redis').createClient(settings.server.redis_socket)
+else if settings.server.redis_port? or settings.server.redis_host?
+    redis = require('redis').createClient(settings.server.redis_port, settings.server.redis_host)
+
+if settings.logging?
+    logger.remove(logger.transports.Console)
+    for loggerconfig in settings.logging
+        transport = logger.transports[loggerconfig['transport']]
+        if transport?
+            logger.add(transport, loggerconfig.options || {})
+        else
+            process.stderr.write "Invalid logger transport: #{loggerconfig['transport']}\n"
 
 if settings.server?.redis_auth?
     redis.auth(settings.server.redis_auth)
@@ -44,7 +54,7 @@ checkUserAndPassword = (username, password) =>
         if not settings.server.auth[username]?
             logger.error "Unknown user #{username}"
             return false
-        passwordOK = password is settings.server.auth[username].password
+        passwordOK = password? and password is settings.server.auth[username].password
         if not passwordOK
             logger.error "Invalid password for #{username}"
         return passwordOK
@@ -52,14 +62,19 @@ checkUserAndPassword = (username, password) =>
 
 app = express()
 
-app.configure ->
-    app.use(express.logger(':method :url :status')) if settings.server?.access_log
-    app.use(express.limit('1mb')) # limit posted data to 1MB
-    if settings.server?.auth? and not settings.server?.acl?
-        app.use(express.basicAuth checkUserAndPassword)
-    app.use(express.bodyParser())
-    app.use(app.router)
-    app.disable('x-powered-by');
+app.use(express.logger(':method :url :status')) if settings.server?.access_log
+if settings.server?.auth? and not settings.server?.acl?
+    app.use((req, res, next) ->
+        if req.method == 'OPTIONS'
+            next()
+            return
+
+        express.basicAuth(checkUserAndPassword)(req, res, next)
+    )
+app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }))
+app.use(bodyParser.json({ limit: '1mb' }))
+app.use(app.router)
+app.disable('x-powered-by');
 
 app.param 'subscriber_id', (req, res, next, id) ->
     try

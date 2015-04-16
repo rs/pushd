@@ -4,7 +4,7 @@ logger = require 'winston'
 
 filterFields = (params) ->
     fields = {}
-    fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version']
+    fields[key] = val for own key, val of params when key in ['proto', 'token', 'lang', 'badge', 'version', 'category', 'contentAvailable']
     return fields
 
 exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher) ->
@@ -116,7 +116,7 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
             , (result) ->
                 if not result
                     logger.error "Failed to set properties for #{req.subscriber.id}"
-                res.send if result then 200 else 400
+                res.send if result then 204 else 400
 
     # Get subscriber subscription options
     app.get '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->

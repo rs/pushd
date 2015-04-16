@@ -3,7 +3,7 @@ logger = require 'winston'
 
 class Event
     OPTION_IGNORE_MESSAGE: 1
-    name_format: /^[a-zA-Z0-9:._-]{1,100}$/
+    name_format: /^[a-zA-Z0-9@:._-]{1,100}$/
 
     constructor: (@redis, @name) ->
         throw new Error("Missing redis connection") if not redis?
