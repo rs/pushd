@@ -129,7 +129,7 @@ Event Source
 
 Pushd supports the [Event Source](http://www.w3.org/TR/eventsource/) protocol, also known as Server Sent Events. This allows your web application to benefits from the same pushed event than your native apps.
 
-This protocol is very different from other pushd supported protocol because it doesn't involve subsriber registration nor stored subscriptions. The web service connects to the pushd server and declars which event it is interested in, and then pushd will push subscribed events in this same connections until the client stays connected.
+This protocol is very different from other pushd supported protocol because it doesn't involve subscriber registration nor stored subscriptions. The web service connects to the pushd server and declars which event it is interested in, and then pushd will push subscribed events in this same connections until the client stays connected.
 
 You may want to use [Yaffle EventSource polyfill](https://github.com/Yaffle/EventSource) on the client side in order to support CORS requests with older browsers (see code example bellow).
 
