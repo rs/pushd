@@ -237,7 +237,7 @@ class Subscriber
 
     removeSubscription: (event, cb) ->
         @redis.multi()
-            # check subscriber existance
+            # check subscriber existence
             .zscore("subscribers", @id)
             # remove event from subscriber's subscriptions list
             .zrem("#{@key}:evts", event.name)
