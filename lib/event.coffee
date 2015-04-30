@@ -1,4 +1,5 @@
 async = require 'async'
+Subscriber = require('./subscriber').Subscriber
 logger = require 'winston'
 
 class Event
@@ -30,7 +31,6 @@ class Event
                     cb(null)
 
     unicastSubscriber: ->
-        Subscriber = require('./subscriber').Subscriber
         if (matches = Event::unicast_format.exec @name)?
             subscriberId = matches[1]
             new Subscriber(@redis, subscriberId)
@@ -85,7 +85,6 @@ class Event
     # Performs an action on each subscriber subscribed to this event
     forEachSubscribers: (action, finished) ->
         Subscriber = require('./subscriber').Subscriber
-
         if (subscriber = @unicastSubscriber())?
             # if event is unicast, do not treat score as subscription option, ignore it
             action(subscriber, {}, -> finished(1) if finished)
