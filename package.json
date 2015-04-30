@@ -31,12 +31,12 @@
     "dependencies":
     {
         "coffee-script": "~1.8.0",
-        "apn": "1.6.2",
+        "apn": "1.7.3",
         "c2dm": "1.2.1",
-        "node-gcm": "0.9.12",
+        "node-gcm": "0.9.15",
         "mpns": "2.1.0",
-        "async": "~0.2.5",
-        "express": "~3.16.8",
+        "async": "~0.2.10",
+        "express": "~3.20.2",
         "body-parser": "~1.9.0",
         "hiredis": "~0.1.17",
         "redis": "~0.12.1",
