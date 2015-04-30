@@ -7,8 +7,8 @@ class PushServiceAPNS
             return token.toLowerCase()
 
     constructor: (conf, @logger, tokenResolver) ->
-        conf.errorCallback = (errCode, note, device) =>
-            @logger?.error("APNS Error #{errCode} for subscriber #{device?.subscriberId}")
+        conf.errorCallback = (errCode, note) =>
+            @logger?.error("APNS Error #{errCode}: #{note}")
 
         # The APN library decided to change the default version of those variables in 1.5.1
         # Maintain the previous defaults in order not to break backward compat.
