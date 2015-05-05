@@ -128,9 +128,13 @@ if eventSourceEnabled
     require('./lib/eventsource').setup(app, authorize, eventPublisher)
 
 port = settings?.server?.tcp_port ? 80
-app.listen port
-logger.info "Listening on tcp port #{port}"
-
+listen_ip = settings?.server?.listen_ip
+if listen_ip
+    app.listen port, listen_ip
+    logger.info "Listening on ip address #{listen_ip} and tcp port #{port}"
+else
+    app.listen port
+    logger.info "Listening on tcp port #{port}"
 
 # UDP Event API
 udpApi = dgram.createSocket("udp4")
