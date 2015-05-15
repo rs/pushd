@@ -17,6 +17,7 @@ Features
 - Server side message translation
 - Message template
 - Broadcast
+- Direct messages
 - GCM multicast messaging
 - Events statistics
 - Automatic failing subscriber unregistration
@@ -368,7 +369,7 @@ To test for the presence of a single subscription, perform a GET on the subscrip
     <
     < {"ignore_message":false}
 
-#### Bulk edit subcribers's Subscriptions
+#### Bulk edit subscribers's Subscriptions
 
 To set all subscriptions in one request, perform a POST with a JSON object on `/subscriber/SUBSCRIBER_ID/subscriptions` with event names as key and a dictionary of options as value or null.
 
@@ -384,9 +385,19 @@ To set all subscriptions in one request, perform a POST with a JSON object on `/
 
 ### Event Ingestion
 
-To generate notifications, your service must send events to pushd. The service doesn't have to know if a subscriber is subscribed to an event in order to send it, it just send all subscriptable events as they happen and pushd handles the rest.
+To generate notifications, your service must send events to pushd. The service doesn't have to know if a subscriber is subscribed to an event in order to send it, it just sends all subscriptable events as they happen and pushd handles the rest.
+
+It is also possible to ignore subscriptions and generate notifications directly using specialized event names.
 
 An event is some key/value pairs in a specific format sent to pushd either using HTTP POST or UDP datagrams.
+
+#### Event names
+
+The event name is commonly used to send notifications for registered subscriptions. There are two exceptions, in which case notifications can be sent without a subscription:
+
+- `broadcast` sends the notification to all subscribers
+- `unicast:SUBSCRIBER_ID` sends the notification to the subscriber with the specified id
+
 
 #### Event Message Format
 
