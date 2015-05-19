@@ -7,6 +7,10 @@ class Event
     name_format: /^[a-zA-Z0-9@:._-]{1,100}$/
     unicast_format: /^unicast:(.+)$/
 
+    listEvents: (redis, cb) ->
+        redis.smembers 'events', (err, values) ->
+            cb(values) if cb
+
     constructor: (@redis, @name) ->
         throw new Error("Missing redis connection") if not @redis?
         throw new Error('Invalid event name ' + @name) if not Event::name_format.test @name
