@@ -52,7 +52,10 @@ class PushServiceGCM
                 @handleResult multicastResult, message.subscribers[0]
 
     handleResult: (result, subscriber) ->
-        if result.messageId or result.message_id
+        if result.registration_id?
+            # Remove duplicated subscriber for one device
+            subscriber.delete() if result.registration_id isnt subscriber.info.token
+        else if result.messageId or result.message_id
             # if result.canonicalRegistrationId
                 # TODO: update subscriber token
         else
