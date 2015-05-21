@@ -511,6 +511,22 @@ The DELETE method is also available thrus UDP.
 - `204` Event deleted
 - `404` The specified event does not exist
 
+### Monitoring
+
+#### Check service status
+
+Ensures that the service is running and connected to Redis.
+
+    > GET /status HTTP/1.1
+    >
+    ---
+    < HTTP/1.1 204 No Content 
+
+##### Return Codes
+
+- `204` Server running and connected to Redis
+- `503` Server running but not connected to Redis
+
 
 Logging
 -------

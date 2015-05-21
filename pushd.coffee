@@ -84,6 +84,9 @@ getEventFromId = (id) ->
 testSubscriber = (subscriber) ->
     pushServices.push(subscriber, null, new Payload({msg: "Test", "data.test": "ok"}))
 
+checkStatus = () ->
+    return redis.connected
+
 app.param 'event_id', (req, res, next, id) ->
     try
         req.event = getEventFromId(req.params.event_id)
@@ -123,7 +126,7 @@ authorize = (realm) ->
     else
         return (req, res, next) -> next()
 
-require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher)
+require('./lib/api').setupRestApi(app, createSubscriber, getEventFromId, authorize, testSubscriber, eventPublisher, checkStatus)
 if eventSourceEnabled
     require('./lib/eventsource').setup(app, authorize, eventPublisher)
 
