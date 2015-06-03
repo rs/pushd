@@ -26,6 +26,7 @@ class Payload
                 when 'msg' then @msg.default = value
                 when 'sound' then @sound = value
                 when 'incrementBadge' then @incrementBadge = value != 'false'
+                when 'badge' then @badge = value
                 when 'category' then @category = value
                 when 'contentAvailable' then @contentAvailable = value != 'false'
                 else
