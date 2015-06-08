@@ -1,5 +1,4 @@
 async = require 'async'
-Subscriber = require('./subscriber').Subscriber
 logger = require 'winston'
 
 class Event
@@ -31,6 +30,7 @@ class Event
                     cb(null)
 
     unicastSubscriber: ->
+        Subscriber = require('./subscriber').Subscriber
         if (matches = Event::unicast_format.exec @name)?
             subscriberId = matches[1]
             new Subscriber(@redis, subscriberId)
