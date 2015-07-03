@@ -123,9 +123,9 @@ class Subscriber
             cb(@info)
         else
             @redis.hgetall @key, (err, @info) =>
-                if info?.updated? # subscriber exists
+                if @info?.updated? # subscriber exists
                     # transform numeric value to number type
-                    for own key, value of info
+                    for own key, value of @info
                         num = parseInt(value)
                         @info[key] = if num + '' is value then num else value
                     cb(@info)
@@ -237,7 +237,7 @@ class Subscriber
 
     removeSubscription: (event, cb) ->
         @redis.multi()
-            # check subscriber existance
+            # check subscriber existence
             .zscore("subscribers", @id)
             # remove event from subscriber's subscriptions list
             .zrem("#{@key}:evts", event.name)
