@@ -15,10 +15,11 @@ exports.setup = (app, authorize, eventPublisher) ->
     app.options '/subscribe', (req, res) ->
         res.set
             'Content-Type': 'text/event-stream',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': req.get('Origin') || '*',
             'Access-Control-Allow-Methods': 'GET'
             'Access-Control-Max-Age': '86400',
-            'Access-Control-Allow-Headers': 'Authorization'
+            'Access-Control-Allow-Headers': 'Authorization',
+            'Access-Control-Allow-Credentials': true
         res.end()
 
     app.get '/subscribe', authorize('listen'), (req, res) ->
