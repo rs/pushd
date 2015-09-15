@@ -40,7 +40,7 @@ class PushServiceAPNS
             if subOptions?.ignore_message isnt true and alert = payload.localizedMessage(info.lang)
                 note.alert = alert
 
-            badge = parseInt(info.badge)
+            badge = parseInt(payload.badge || info.badge)
             if payload.incrementBadge
                 badge += 1
             
