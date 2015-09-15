@@ -1,10 +1,8 @@
 gcm = require 'node-gcm'
 
 class PushServiceGCM
-    tokenFormat: /^[a-zA-Z0-9_-]+$/
     validateToken: (token) ->
-        if PushServiceGCM::tokenFormat.test(token)
-            return token
+        return token
 
     constructor: (conf, @logger, tokenResolver) ->
         conf.concurrency ?= 10
