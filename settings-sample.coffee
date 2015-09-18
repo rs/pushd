@@ -70,6 +70,8 @@ exports['gcm'] =
     enabled: yes
     class: require('./lib/pushservices/gcm').PushServiceGCM
     key: 'GCM API KEY HERE'
+    #options:
+       #proxy: 'PROXY SERVER HERE'
 
 # # Legacy Android Push Service
 # exports['c2dm'] =
