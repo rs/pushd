@@ -4,13 +4,22 @@ dgram = require 'dgram'
 zlib = require 'zlib'
 url = require 'url'
 Netmask = require('netmask').Netmask
-settings = require './settings'
+
 Subscriber = require('./lib/subscriber').Subscriber
 EventPublisher = require('./lib/eventpublisher').EventPublisher
 Event = require('./lib/event').Event
 PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
 logger = require 'winston'
+
+settings_filename = "./settings"
+###
+parse cmdline. To select another settings file copy settings.coffee into settings_name.coffee and run
+node server.js settings_name
+###
+if process.argv.length >= 3
+    settings_filename = "./" + process.argv[2]
+settings = require(settings_filename)
 
 if settings.server.redis_socket?
     redis = require('redis').createClient(settings.server.redis_socket)
