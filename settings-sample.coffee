@@ -3,6 +3,7 @@ exports.server =
     redis_host: 'localhost'
     # redis_socket: '/var/run/redis/redis.sock'
     # redis_auth: 'password'
+    # listen_ip: '10.0.1.2'
     tcp_port: 80
     udp_port: 80
     access_log: yes
@@ -118,7 +119,7 @@ exports['mpns-raw'] =
     type: 'raw'
 
 # Transports: Console, File, Http
-# 
+#
 # Common options:
 # level:
 #   error: log errors only
