@@ -16,6 +16,8 @@ if settings.server.redis_socket?
     redis = require('redis').createClient(settings.server.redis_socket)
 else if settings.server.redis_port? or settings.server.redis_host?
     redis = require('redis').createClient(settings.server.redis_port, settings.server.redis_host)
+else
+    redis = require('redis').createClient()
 if settings.server.redis_db_number?
     redis.select(settings.server.redis_db_number)
 
