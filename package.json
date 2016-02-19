@@ -38,7 +38,7 @@
         "async": "~0.2.10",
         "express": "~3.20.2",
         "body-parser": "~1.9.0",
-        "hiredis": "~0.1.17",
+        "hiredis": "~0.4.1",
         "redis": "~0.12.1",
         "netmask": "~1.0.4",
         "winston": "~0.7.3",
