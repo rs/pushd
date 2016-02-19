@@ -69,6 +69,7 @@ describe 'Event', ->
                 unhandledSubscribers = {}
                 for subscriber in subscribers
                     unhandledSubscribers[subscriber.id] = true
+
                 @event.forEachSubscribers (subscriber, subOptions, done) =>
                     unhandledSubscribers[subscriber.id].should.be.true
                     delete unhandledSubscribers[subscriber.id]

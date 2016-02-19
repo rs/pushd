@@ -179,19 +179,19 @@ describe 'Subscriber', ->
         it 'should not remove subscription on an unexisting subscription', (done) =>
             subscriber = new Subscriber(@subscriber.redis, 'invalidid')
             subscriber.removeSubscription @testEvent, (removed) =>
-                should.not.exist removed
+                should.exist(removed)
                 done()
         it 'should not remove an unsubscribed event', (done) =>
             @subscriber.removeSubscription @testEvent, (removed) =>
-                removed.should.be.false
+                should.not.exist(removed)
                 done()
         it 'should remove an subscribed event correctly', (done) =>
             @subscriber.addSubscription @testEvent, 0, (added) =>
                 added.should.be.true
                 @subscriber.removeSubscription @testEvent, (removed) =>
-                    removed.should.be.true
+                    should.not.exist(removed)
                     done()
         it 'should not remove an already removed subscription', (done) =>
             @subscriber.removeSubscription @testEvent, (removed) =>
-                removed.should.be.false
+                should.not.exist(removed)
                 done()
