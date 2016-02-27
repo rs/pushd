@@ -63,14 +63,13 @@ class Event
         if @unicastSubscriber()?
             performDelete()
         else
-            subscriberCount = 0
-            @forEachSubscribers (subscriber, subOptions, done) =>
+            @forEachSubscribers (subscriber, subOptions, doneCb) =>
                 # action
-                subscriber.removeSubscription(@, done)
-                subscriberCount += 1
-            , =>
+                subscriber.removeSubscription(@, doneCb)
+                # subscriberCount += 1
+            , (totalSubscribers)=>
                 # finished
-                logger.verbose "Unsubscribed #{subscriberCount} subscribers from #{@name}"
+                logger.verbose "Unsubscribed #{totalSubscribers} subscribers from #{@name}"
                 performDelete()
 
     log: (cb) ->
@@ -92,35 +91,37 @@ class Event
             if @name is 'broadcast'
                 # if event is broadcast, do not treat score as subscription option, ignore it
                 performAction = (subscriberId, subOptions) =>
-                    return (done) =>
-                        action(new Subscriber(@redis, subscriberId), {}, (done))
+                    return (doneCb) =>
+                        action(new Subscriber(@redis, subscriberId), {}, (doneCb))
             else
                 performAction = (subscriberId, subOptions) =>
                     options = {ignore_message: (subOptions & Event::OPTION_IGNORE_MESSAGE) isnt 0}
-                    return (done) =>
-                        action(new Subscriber(@redis, subscriberId), options, done)
+                    return (doneCb) =>
+                        action(new Subscriber(@redis, subscriberId), options, doneCb)
 
             subscribersKey = if @name is 'broadcast' then 'subscribers' else "#{@key}:subs"
-            page = 0
+
             perPage = 100
-            total = 0
-            async.whilst =>
-                # test if we got less items than requested during last request
-                # if so, we reached to end of the list
-                return page * perPage == total
-            , (done) =>
-                # treat subscribers by packs of 100 with async to prevent from blocking the event loop
-                # for too long on large subscribers lists
-                @redis.zrange subscribersKey, (page * perPage), (page * perPage + perPage - 1), 'WITHSCORES', (err, subscriberIdsAndOptions) =>
-                    tasks = []
-                    for id, i in subscriberIdsAndOptions by 2
-                        tasks.push performAction(id, subscriberIdsAndOptions[i + 1])
-                    async.series tasks, =>
-                        total += subscriberIdsAndOptions.length / 2
-                        done()
-                page++
-            , =>
-                # all done
-                finished(total) if finished
+            page = 0
+
+            @redis.zcard subscribersKey, (err, subcount) =>
+              total = subcount
+              totalPages = Math.ceil((subcount*1.0)/perPage)
+              async.whilst =>
+                  return  page < totalPages
+              , (chunkDone) =>
+                  # treat subscribers by packs of 100 with async to prevent from blocking the event loop
+                  # for too long on large subscribers lists
+                  @redis.zrange subscribersKey, Math.max(0,total - ((page+1)*perPage)), total - ((page)*perPage)-1, 'WITHSCORES', (err, subscriberIdsAndOptions) =>
+                      tasks = []
+                      for id, i in subscriberIdsAndOptions by 2
+                          tasks.push performAction(id, subscriberIdsAndOptions[i + 1])
+                      async.series tasks, =>
+                          #total += subscriberIdsAndOptions.length / 2
+                          page++
+                          chunkDone()
+              , =>
+                  # all done
+                  finished(subcount) if finished
 
 exports.Event = Event
