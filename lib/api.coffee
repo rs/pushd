@@ -160,8 +160,13 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
 
     # Publish an event
     app.post '/event/:event_id', authorize('publish'), (req, res) ->
-        res.send 204
-        eventPublisher.publish(req.event, req.body)
+        req.event.exists (exists) ->
+            if not exists
+                logger.error "No event #{req.event.name}"
+            else
+                eventPublisher.publish(req.event, req.body)
+
+            res.send if exists then 204 else 404
 
     # Delete an event
     app.delete '/event/:event_id', authorize('publish'), (req, res) ->
