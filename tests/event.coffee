@@ -28,7 +28,7 @@ describe 'Event', ->
     @subscriber = null
 
     beforeEach (done) =>
-        @redis = redis.createClient()
+        @redis = redis.createClient(6379, 'db')
         @redis.multi()
             .select(1) # use another db for testing
             .flushdb()

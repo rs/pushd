@@ -1,4 +1,5 @@
 node_modules/
-settings.coffee
+#settings.coffee
 *.pem
 *.swp
+*.env

@@ -1,6 +1,13 @@
 language: node_js
 node_js:
   - "0.11"
-  - "0.10"
+
+before_install:
+  - docker-compose build
+  - docker-compose  up -d
+
 services:
-  - redis-server
+  - docker
+
+script:
+  - docker-compose run api npm test
