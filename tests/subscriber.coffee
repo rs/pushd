@@ -23,7 +23,7 @@ describe 'Subscriber', ->
             fn()
 
             before (done) =>
-                @redis = redis.createClient()
+                @redis = redis.createClient(6379, 'db')
                 @redis.multi()
                     .select(1)
                     .exec =>
