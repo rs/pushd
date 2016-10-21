@@ -1,57 +1,63 @@
 {
-    "author": "Olivier Poitrey <rs@dailymotion.com>",
-    "name": "pushd",
-    "description": "Blazing fast multi-protocol mobile push notification service",
-    "version": "1.6.5",
-    "homepage": "https://github.com/rs/pushd",
-    "keywords": ["push", "notification", "apns", "c2dm", "mpns", "ios", "android", "windows", "phone"],
-    "repository":
+  "author": "Olivier Poitrey <rs@dailymotion.com>",
+  "name": "pushd",
+  "description": "Blazing fast multi-protocol mobile push notification service",
+  "version": "1.6.5",
+  "homepage": "https://github.com/rs/pushd",
+  "keywords": [
+    "push",
+    "notification",
+    "apns",
+    "c2dm",
+    "mpns",
+    "ios",
+    "android",
+    "windows",
+    "phone"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/rs/pushd.git"
+  },
+  "preferGlobal": "true",
+  "bin": {
+    "pushd-server": "./server.js"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "scripts": {
+    "start": "sudo node server.js",
+    "test": "mocha --compilers coffee:coffee-script/register --reporter spec tests/*.coffee"
+  },
+  "engines": {
+    "node": "~0.10.0"
+  },
+  "dependencies": {
+    "apn": "1.7.3",
+    "async": "~0.2.10",
+    "body-parser": "~1.9.0",
+    "c2dm": "1.2.1",
+    "coffee-script": "~1.8.0",
+    "express": "~3.20.2",
+    "hiredis": "~0.4.1",
+    "mpns": "2.1.0",
+    "netmask": "~1.0.4",
+    "node-gcm": "0.12.0",
+    "raven": "^0.12.1",
+    "redis": "~1.0.0",
+    "winston": "~0.7.3",
+    "winston-loggly": "^1.3.1",
+    "wns": "git+https://github.com/futurice/wns.git#28bfe39a3be8c64f3d72b7c7a5cac77c049b137a"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
+  },
+  "licenses": [
     {
-        "type": "git",
-        "url": "git://github.com/rs/pushd.git"
-    },
-    "preferGlobal": "true",
-    "bin":
-    {
-        "pushd-server": "./server.js"
-    },
-    "directories":
-    {
-        "lib": "./lib"
-    },
-    "scripts":
-    {
-        "start": "sudo node server.js",
-        "test": "mocha --compilers coffee:coffee-script/register --reporter spec tests/*.coffee"
-    },
-    "engines":
-    {
-        "node": "~0.10.0"
-    },
-    "dependencies":
-    {
-        "coffee-script": "~1.8.0",
-        "apn": "1.7.3",
-        "c2dm": "1.2.1",
-        "node-gcm": "0.12.0",
-        "mpns": "2.1.0",
-        "async": "~0.2.10",
-        "express": "~3.20.2",
-        "body-parser": "~1.9.0",
-        "hiredis": "~0.4.1",
-        "redis": "~1.0.0",
-        "netmask": "~1.0.4",
-        "winston": "~0.7.3",
-        "wns": "git+https://github.com/futurice/wns.git#28bfe39a3be8c64f3d72b7c7a5cac77c049b137a"
-    },
-    "devDependencies":
-    {
-        "mocha": "*",
-        "should": "*"
-    },
-    "licenses":
-    [{
       "type": "MIT",
       "url": "https://github.com/rs/pushd/raw/master/LICENSE"
-    }]
+    }
+  ]
 }

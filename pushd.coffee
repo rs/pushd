@@ -11,6 +11,10 @@ Event = require('./lib/event').Event
 PushServices = require('./lib/pushservices').PushServices
 Payload = require('./lib/payload').Payload
 logger = require 'winston'
+raven = require 'raven'
+
+client = new raven.Client('https://48c2278040164ae3972be8da79583244:36079006ceb64adb84a14d342801f3b9@sentry.io/108372');
+client.patchGlobal()
 
 if settings.server.redis_socket?
     redis = require('redis').createClient(settings.server.redis_socket)
