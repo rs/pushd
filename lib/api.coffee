@@ -169,7 +169,7 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
         eventIds = req.body.eventIds
         events = (getEventFromId(eventId) for eventId in eventIds)
         delete req.body.eventIds
-        eventPublish.publish(event) for event in events
+        eventPublisher.publish(event, req.body) for event in events
 
     # Delete an event
     app.delete '/event/:event_id', authorize('publish'), (req, res) ->
