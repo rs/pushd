@@ -47,26 +47,25 @@ class EventPublisher extends events.EventEmitter
                         else
                             protoCounts[info.proto] = 1
 
-						try
-						      @pushServices.push(subscriber, subOptions, payload, done)
-	            , (totalSubscribers) =>
-	                # finished
-	                logger.verbose "Pushed to #{totalSubscribers} subscribers"
-	                for proto, count of protoCounts
-	                    logger.verbose "#{count} #{proto} subscribers"
+                try
+                    @pushServices.push(subscriber, subOptions, payload, done)
+                catch error
+                  logger.error 'ERROR from push driver'
+                  logger.error 'Protocol'
+                  logger.error protoCounts
+                  logger.error error
+            , (totalSubscribers) =>
+                # finished
+                logger.verbose "Pushed to #{totalSubscribers} subscribers"
+                for proto, count of protoCounts
+                    logger.verbose "#{count} #{proto} subscribers"
 
-	                if totalSubscribers > 0
-	                    # update some event' stats
-	                    event.log =>
-	                        cb(totalSubscribers) if cb
-	                else
-	                    # if there is no subscriber, cleanup the event
-	                    event.delete =>
-	                        cb(0) if cb
-
-						catch error
-							logger.error 'ERROR from push driver'
-							logger.error 'Protocol'
-							logger.error protoCounts
-							logger.error error
+                if totalSubscribers > 0
+                    # update some event' stats
+                    event.log =>
+                        cb(totalSubscribers) if cb
+                else
+                    # if there is no subscriber, cleanup the event
+                    event.delete =>
+                        cb(0) if cb
 exports.EventPublisher = EventPublisher
