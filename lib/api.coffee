@@ -179,3 +179,15 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
             res.send 204
         else
             res.send 503
+
+    # Publish multiple events
+    app.post '/events', authorize('publish'), (req, res) ->
+        res.send 204
+        events = Object.keys(req.body)
+
+        async.every events, (event) ->
+            try
+                redisEvent = getEventFromId(event)
+                eventPublisher.publish(redisEvent, req.body[event])
+            catch error
+                logger.error "No event #{event}: #{error.message}"

@@ -12,12 +12,14 @@ exports.setup = (app, authorize, eventPublisher) ->
         res.set 'Content-Type', 'application/xml'
         res.send(policyFile)
 
-    app.options '/subscribe', authorize('listen'), (req, res) ->
+    app.options '/subscribe', (req, res) ->
         res.set
             'Content-Type': 'text/event-stream',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': req.get('Origin') || '*',
             'Access-Control-Allow-Methods': 'GET'
-            'Access-Control-Max-Age': '86400'
+            'Access-Control-Max-Age': '86400',
+            'Access-Control-Allow-Headers': 'Authorization',
+            'Access-Control-Allow-Credentials': true
         res.end()
 
     app.get '/subscribe', authorize('listen'), (req, res) ->
@@ -31,13 +33,14 @@ exports.setup = (app, authorize, eventPublisher) ->
 
         eventNames = req.query.events.split ' '
 
-		# Node.js 0.12 requires timeout argument be finite
+        # Node.js 0.12 requires timeout argument be finite
         req.socket.setTimeout(0x7FFFFFFF);
         req.socket.setNoDelay(true);
         res.set
             'Content-Type': 'text/event-stream',
             'Cache-Control': 'no-cache',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': req.get('Origin') || '*',
+            'Access-Control-Allow-Credentials': true,
             'Connection': 'close'
         res.write('\n')
 
