@@ -3,6 +3,7 @@ exports.server =
     redis_host: 'localhost'
     # redis_socket: '/var/run/redis/redis.sock'
     # redis_auth: 'password'
+    # redis_db_number: 2
     # listen_ip: '10.0.1.2'
     tcp_port: 80
     udp_port: 80
@@ -70,6 +71,8 @@ exports['gcm'] =
     enabled: yes
     class: require('./lib/pushservices/gcm').PushServiceGCM
     key: 'GCM API KEY HERE'
+    #options:
+       #proxy: 'PROXY SERVER HERE'
 
 # # Legacy Android Push Service
 # exports['c2dm'] =

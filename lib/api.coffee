@@ -141,12 +141,13 @@ exports.setupRestApi = (app, createSubscriber, getEventFromId, authorize, testSu
 
     # Unsubscribe a subscriber from an event
     app.delete '/subscriber/:subscriber_id/subscriptions/:event_id', authorize('register'), (req, res) ->
-        req.subscriber.removeSubscription req.event, (deleted) ->
-            if not deleted?
-                logger.error "No subscriber #{req.subscriber.id}"
-            else if not deleted
-                logger.error "Subscriber #{req.subscriber.id} was not subscribed to #{req.event.name}"
-            res.send if deleted then 204 else 404
+        req.subscriber.removeSubscription req.event, (errorDeleting) ->
+            if errorDeleting?
+                logger.error "No subscriber #{req.subscriber.id} or not subscribed to #{req.event.name}"
+
+            # TODO: add the check for empty events and the requisite event.delete() call here.
+
+            res.send if errorDeleting then 404 else 204
 
     # Event stats
     app.get '/event/:event_id', authorize('register'), (req, res) ->
