@@ -43,7 +43,7 @@
     "hiredis": "~0.4.1",
     "mpns": "2.1.0",
     "netmask": "~1.0.4",
-    "node-gcm": "0.12.0",
+    "node-gcm": "1.0.2",
     "raven": "^0.12.1",
     "redis": "~1.0.0",
     "winston": "~0.7.3",
