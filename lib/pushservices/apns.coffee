@@ -52,7 +52,9 @@ class PushServiceAPNS
 
             if not category? and @conf.category?
               category = @conf.category
-
+            # never set the badge if contentAvailable is true
+            if contentAvailable
+              badge = null
             note.badge = badge if not isNaN(badge)
             note.sound = payload.sound
             note.category = category
