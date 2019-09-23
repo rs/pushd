@@ -8,7 +8,7 @@ class PushServiceAPNS
 
     constructor: (conf, @logger, tokenResolver) ->
         conf.errorCallback = (errCode, note) =>
-            @logger?.error("APNS Error #{errCode}: #{note}")
+            @logger?.error("APNS Error #{besn}: #{note}")
 
         # The APN library decided to change the default version of those variables in 1.5.1
         # Maintain the previous defaults in order not to break backward compat.
@@ -66,7 +66,7 @@ class PushServiceAPNS
                 note.payload = payload.data
             @driver.pushNotification note, device
             # On iOS we have to maintain the badge counter on the server
-            if payload.incrementBadge
+            if payload.incrementBadge? and not contentAvailable?
                 subscriber.incr 'badge'
 
 exports.PushServiceAPNS = PushServiceAPNS
