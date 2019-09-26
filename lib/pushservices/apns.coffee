@@ -58,7 +58,7 @@ class PushServiceAPNS
               note.badge = badge
             note.pushType = 'alert'
             note.sound = payload.sound
-            note.topic = undefined
+            note.topic = info.proto.split("apns-").join("")
             note.category = category
             note.contentAvailable = contentAvailable
             if @payloadFilter?
