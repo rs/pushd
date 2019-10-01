@@ -10,12 +10,12 @@ class PushServiceAPNS
         conf.errorCallback = (errCode, note) =>
             @logger?.error("APNS Error #{besn}: #{note}")
         # These should be provided in the certificate configuration. Keeping it in case of debugging a sandbox cert.
-        # conf['address'] ||= 'api.push.apple.com'
+        conf['address'] ||= 'api.push.apple.com'
         try
           @driver = new apns.Provider(conf)
           @payloadFilter = conf.payloadFilter
           # These should be provided in the certificate configuration. Keeping it in case of debugging a sandbox cert.
-          # conf.address = "api.push.apple.com"
+          conf.address = "api.push.apple.com"
           @conf = conf
         catch error
           console.error "The error is ... #{error} and the cert is ... #{conf.cert}"
