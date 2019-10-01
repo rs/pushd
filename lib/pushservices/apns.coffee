@@ -8,7 +8,7 @@ class PushServiceAPNS
 
     constructor: (conf, @logger, tokenResolver) ->
         conf.errorCallback = (errCode, note) =>
-            @logger?.error("APNS Error #{besn}: #{note}")
+            @logger?.error("APNS Error #{JSON.stringify errCode}: #{note} and the cert is ... #{conf.cert}")
         # These should be provided in the certificate configuration. Keeping it in case of debugging a sandbox cert.
         conf['address'] ||= 'api.push.apple.com'
         try
@@ -33,10 +33,10 @@ class PushServiceAPNS
             category = payload.category
             contentAvailable = payload.contentAvailable
 
-            if not contentAvailable? and @conf.contentAvailable?
+            if not contentAvailable? and @conf? and @conf.contentAvailable?
               contentAvailable = @conf.contentAvailable
 
-            if not category? and @conf.category?
+            if not category? and @conf? and @conf.category?
               category = @conf.category
             # never set the badge if contentAvailable is true
             # if contentAvailable
