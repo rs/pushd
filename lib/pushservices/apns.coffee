@@ -55,10 +55,11 @@ class PushServiceAPNS
                     note.payload[key] = val if key in @payloadFilter
             else
                 note.payload = payload.data
-            @driver.send(note, info.token).then (response) ->
-                        console.log "The response from sending a push is #{JSON.stringify response} Subscriber ID: #{JSON.stringify subscriber.id}"
-                    .catch (error) ->
-                        console.error "The error from sending a push is #{error} Subscriber ID: #{JSON.stringify subscriber.id}"
+            if @driver?
+              @driver.send(note, info.token).then (response) ->
+                          console.log "The response from sending a push is #{JSON.stringify response} Subscriber ID: #{JSON.stringify subscriber.id}"
+                        .catch (error) ->
+                          console.error "The error from sending a push is #{error} Subscriber ID: #{JSON.stringify subscriber.id}"
             # On iOS we have to maintain the badge counter on the server
             if payload.incrementBadge? and not contentAvailable?
                 subscriber.incr 'badge'
