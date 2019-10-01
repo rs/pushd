@@ -9,29 +9,16 @@ class PushServiceAPNS
     constructor: (conf, @logger, tokenResolver) ->
         conf.errorCallback = (errCode, note) =>
             @logger?.error("APNS Error #{besn}: #{note}")
-
-        # The APN library decided to change the default version of those variables in 1.5.1
-        # Maintain the previous defaults in order not to break backward compat.
-        # conf['gateway'] ||= 'gateway.push.apple.com'
-        conf['address'] ||= 'api.push.apple.com'
+        # These should be provided in the certificate configuration. Keeping it in case of debugging a sandbox cert.
+        # conf['address'] ||= 'api.push.apple.com'
         try
           @driver = new apns.Provider(conf)
           @payloadFilter = conf.payloadFilter
-          conf.address = "api.push.apple.com"
+          # These should be provided in the certificate configuration. Keeping it in case of debugging a sandbox cert.
+          # conf.address = "api.push.apple.com"
           @conf = conf
         catch error
           console.error "The error is ... #{error} and the cert is ... #{conf.cert}"
-        # @feedback = new apns.Feedback(conf)
-        # # Handle Apple Feedbacks
-        # @feedback.on 'feedback', (feedbackData) =>
-        #     @logger?.debug("APNS feedback returned #{feedbackData.length} devices")
-        #     feedbackData.forEach (item) =>
-        #         tokenResolver 'apns', item.device.toString(), (subscriber) =>
-        #             subscriber?.get (info) =>
-        #                 if info.updated < item.time
-        #                     @logger?.warn("APNS Automatic unregistration for subscriber #{subscriber.id}")
-        #                     subscriber.delete()
-
 
     push: (subscriber, subOptions, payload) ->
         subscriber.get (info) =>
@@ -54,7 +41,9 @@ class PushServiceAPNS
             # never set the badge if contentAvailable is true
             # if contentAvailable
               # badge = null
+            note.priority = 5
             if not contentAvailable
+              note.priority = 10
               note.badge = badge
             note.pushType = 'alert'
             note.sound = payload.sound
