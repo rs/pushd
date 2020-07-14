@@ -8,7 +8,7 @@ class PushServiceAPNS
 
     constructor: (conf, @logger, tokenResolver) ->
         conf.errorCallback = (errCode, note) =>
-            console.error("APNS Error #{JSON.stringify errCode}: #{note} and the cert is ... #{conf.cert}")
+            logger?.error("APNS Error #{JSON.stringify errCode}: #{note} and the cert is ... #{conf.cert}")
         # These should be provided in the certificate configuration. Keeping it in case of debugging a sandbox cert.
         conf['address'] ||= 'api.push.apple.com'
         try
