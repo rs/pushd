@@ -8,7 +8,7 @@ class PushServiceAPNS
 
     constructor: (conf, @logger, tokenResolver) ->
         conf.errorCallback = (errCode, note) =>
-            @logger?.error("APNS Error #{JSON.stringify errCode}: #{note} and the cert is ... #{conf.cert}")
+            console.error("APNS Error #{JSON.stringify errCode}: #{note} and the cert is ... #{conf.cert}")
         # These should be provided in the certificate configuration. Keeping it in case of debugging a sandbox cert.
         conf['address'] ||= 'api.push.apple.com'
         try
@@ -60,6 +60,8 @@ class PushServiceAPNS
                           console.log "The response from sending a push is #{JSON.stringify response} Subscriber ID: #{JSON.stringify subscriber.id}"
                         .catch (error) ->
                           console.error "The error from sending a push is #{error} Subscriber ID: #{JSON.stringify subscriber.id}"
+            else
+              console.error "Driver is not set. Subscriber ID: #{JSON.stringify subscriber.id}"
             # On iOS we have to maintain the badge counter on the server
             if payload.incrementBadge? and not contentAvailable?
                 subscriber.incr 'badge'
