@@ -48,6 +48,7 @@ class EventPublisher extends events.EventEmitter
                             protoCounts[info.proto] = 1
 
                 try
+                    logger.verbose "Going to send message to subscriber #{JSON.stringify subscriber.id}"
                     @pushServices.push(subscriber, subOptions, payload, done)
                 catch error
                   logger.error 'ERROR from push driver'
