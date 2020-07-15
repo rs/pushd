@@ -57,9 +57,9 @@ class PushServiceAPNS
                 note.payload = payload.data
             #if @driver?
             @driver.send(note, info.token).then (response) ->
-                          console.log "The response from sending a push is #{JSON.stringify response} Subscriber ID: #{JSON.stringify subscriber.id}"
+                          console.log "The ios response from sending a push is #{JSON.stringify response} Subscriber ID: #{JSON.stringify subscriber.id}"
                       .catch (error) ->
-                          console.error "The error from sending a push is #{error} Subscriber ID: #{JSON.stringify subscriber.id}"
+                          console.error "The ios error from sending a push is #{error} Subscriber ID: #{JSON.stringify subscriber.id}"
             #else
               #console.error "Driver is not set. Subscriber ID: #{JSON.stringify subscriber.id}"
             # On iOS we have to maintain the badge counter on the server

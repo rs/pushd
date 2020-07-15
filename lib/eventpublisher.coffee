@@ -32,7 +32,7 @@ class EventPublisher extends events.EventEmitter
                 cb(-1) if cb
                 return
 
-            logger.verbose "Pushing message for event #{event.name}"
+            logger.verbose "Pushing message for userID #{event.name}"
             logger.silly "data = #{JSON.stringify data}"
             logger.silly 'Title: ' + payload.localizedTitle('en')
             logger.silly payload.localizedMessage('en')
@@ -48,7 +48,7 @@ class EventPublisher extends events.EventEmitter
                             protoCounts[info.proto] = 1
 
                 try
-                    logger.verbose "Going to send message to subscriber #{JSON.stringify subscriber.id}"
+                    logger.verbose "Going to send message to userID #{event.name} and subscriber #{JSON.stringify subscriber.id}"
                     @pushServices.push(subscriber, subOptions, payload, done)
                 catch error
                   logger.error 'ERROR from push driver'

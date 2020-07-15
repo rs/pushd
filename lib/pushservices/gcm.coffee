@@ -50,6 +50,7 @@ class PushServiceGCM
                 @handleResult multicastResult, message.subscribers[0]
 
     handleResult: (result, subscriber) ->
+        console.log "The android result for subscriber #{subscriber.id} is #{JSON.stringify result}"
         if result.registration_id?
             # Remove duplicated subscriber for one device
             subscriber.delete() if result.registration_id isnt subscriber.info.token
