@@ -19,7 +19,7 @@ class EventPublisher extends events.EventEmitter
 
         event.exists (exists) =>
             if not exists
-                logger.verbose "Tried to publish to a non-existing event #{event.name}"
+                logger.verbose "Tried to publish to a non-existing userID #{event.name}"
                 cb(0) if cb
                 return
 
